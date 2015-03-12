@@ -10,8 +10,6 @@ namespace NiL.C.CodeDom.Declarations
 {
     internal sealed class Argument : Entity
     {
-        private ParameterBuilder info;
-
         private bool pinned = false;
         public bool Pinned
         {
@@ -30,10 +28,19 @@ namespace NiL.C.CodeDom.Declarations
         public int Index { get; private set; }
         public bool IsVarArgArray { get; internal set; }
 
+        internal Argument(string typeName, string name, int index)
+            : base(typeName, name)
+        {
+            if (index <= 0)
+                throw new ArgumentOutOfRangeException("Index must be more then 0");
+            Index = index;
+        }
+
         internal Argument(CType type, string name, int index)
-            : base(type, name)
+            : base(type.Name, name)
         {
             Index = index;
+            Type = type;
         }
 
         internal override void Bind(ModuleBuilder module)
@@ -52,12 +59,12 @@ namespace NiL.C.CodeDom.Declarations
             {
                 case EmitMode.Get:
                     {
-                        method.GetILGenerator().Emit(OpCodes.Ldarg, (short)info.Position);
+                        method.GetILGenerator().Emit(OpCodes.Ldarg, (short)(Index - 1));
                         break;
                     }
                 case EmitMode.SetOrNone:
                     {
-                        method.GetILGenerator().Emit(OpCodes.Starg, (short)info.Position);
+                        method.GetILGenerator().Emit(OpCodes.Starg, (short)(Index - 1));
                         break;
                     }
                 default:
@@ -72,9 +79,14 @@ namespace NiL.C.CodeDom.Declarations
 
         internal override void Bind(MethodBuilder method)
         {
-            if (info != null)
-                throw new InvalidOperationException("Argument already binded");
-            info = method.DefineParameter(Index, ParameterAttributes.In, Name);
+            method.DefineParameter(Index, ParameterAttributes.In, Name);
+        }
+
+        protected override bool Prepare(ref CodeNode self, State state)
+        {
+            base.Prepare(ref self, state);
+            state.DeclareSymbol(this);
+            return false;
         }
     }
 }

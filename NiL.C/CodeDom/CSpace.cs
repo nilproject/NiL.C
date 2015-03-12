@@ -13,19 +13,18 @@ namespace NiL.C.CodeDom
 {
     internal class CSpace
     {
-        private IList<CodeNode> content;
         private State state;
+        public IList<CodeNode> Content { get; private set; }
 
         internal CSpace()
         {
-            this.content = new List<CodeNode>();
+            this.Content = new List<CodeNode>();
             this.state = new State();
         }
 
         internal void Process(string code)
         {
             code = Tools.RemoveComments(code, 0);
-            var content = new List<CodeNode>();
 
             int index = 0;
 
@@ -34,7 +33,7 @@ namespace NiL.C.CodeDom
                 while (code.Length > index && char.IsWhiteSpace(code[index])) index++;
                 var item = Parser.Parse(state, code, ref index, 0);
                 if (item != null)
-                    content.Add(item);
+                    Content.Add(item);
             }
         }
 
@@ -42,21 +41,22 @@ namespace NiL.C.CodeDom
         {
             var assm = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName(name), mode);
             var module = assm.DefineDynamicModule(name + "_Module", kind == PEFileKinds.Dll ? name + ".dll" : name + ".exe");
-            for (var i = 0; i < content.Count; i++)
+            for (var i = 0; i < Content.Count; i++)
             {
-                var t = content[i] as CodeNode;
+                var t = Content[i] as CodeNode;
                 t.Prepare(ref t, state);
-                content[i] = (Definition)t;
+                Content[i] = (Definition)t;
             }
-            for (var i = 0; i < content.Count; i++)
-                ((Definition)content[i]).Bind(module);
-            for (var i = 0; i < content.Count; i++)
-                ((Definition)content[i]).Emit(module);
+            for (var i = 0; i < Content.Count; i++)
+                ((Definition)Content[i]).Bind(module);
+            for (var i = 0; i < Content.Count; i++)
+                ((Definition)Content[i]).Emit(module);
             module.CreateGlobalFunctions();
 
             if (kind != PEFileKinds.Dll)
             {
-                var type = module.DefineType("<Generated>_entryPointWrapper", TypeAttributes.Class | TypeAttributes.NotPublic | TypeAttributes.Abstract | TypeAttributes.Sealed);
+                var type = module.DefineType("<Generated>_entryPointWrapper", 
+                    TypeAttributes.Class | TypeAttributes.NotPublic | TypeAttributes.Abstract | TypeAttributes.Sealed);
                 var entryPoint = type.DefineMethod(
                     "Main",
                     MethodAttributes.HideBySig | MethodAttributes.Static | MethodAttributes.Public,

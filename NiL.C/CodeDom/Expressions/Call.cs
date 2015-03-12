@@ -102,5 +102,17 @@ namespace NiL.C.CodeDom.Expressions
             }
             method.GetILGenerator().Emit(OpCodes.Call, info as MethodInfo);
         }
+
+        protected override bool Prepare(ref CodeNode self, State state)
+        {
+            first.Prepare(ref first, state);
+            for (var i = 0; i < arguments.Length; i++)
+            {
+                var a = arguments[i];
+                a.Prepare(ref a, state);
+                arguments[i] = a;
+            }
+            return false;
+        }
     }
 }

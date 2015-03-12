@@ -105,5 +105,10 @@ namespace NiL.C.CodeDom.Expressions
                         throw new NotImplementedException();
                 }
         }
+
+        protected override bool Prepare(ref CodeNode self, State state)
+        {
+            return false;
+        }
     }
 }

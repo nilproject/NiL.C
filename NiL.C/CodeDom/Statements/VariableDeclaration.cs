@@ -119,7 +119,7 @@ namespace NiL.C.CodeDom.Statements
             return res.ToString();
         }
 
-        protected override bool PreBuild(ref CodeNode self, State state)
+        protected override bool Prepare(ref CodeNode self, State state)
         {
             return false;
         }

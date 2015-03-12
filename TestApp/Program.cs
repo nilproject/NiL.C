@@ -15,14 +15,9 @@ namespace TestApp
             Compiler.CompileAndSave(@"
 void main(void)
 {
-    printf(""{0}"", sum(1,2));
+    printf(""{0}"", 1 + 2 * 3);
 }
-
-int sum(int a, int b)
-{
-    return a + b;
-}
-            ", "TestC", System.Reflection.Emit.PEFileKinds.ConsoleApplication);
+", "TestC", System.Reflection.Emit.PEFileKinds.ConsoleApplication);
             //var method = assembly.GetType("<Generated>_entryPointWrapper").GetMethod("Main", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
             //method.Invoke(null, new string[][] { null });
         }

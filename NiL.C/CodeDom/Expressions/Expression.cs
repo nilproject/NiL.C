@@ -79,13 +79,13 @@ namespace NiL.C.CodeDom.Expressions
 
         Call = OperationTypeGroups.Special + 0,
         New = OperationTypeGroups.Special + 1,
-        CallOrConvert = OperationTypeGroups.Special + 2,
+        GetOrConvert = OperationTypeGroups.Special + 2,
 
         BrackOpen = OperationTypeGroups.Special + 3,
         SquareBrackOpen = OperationTypeGroups.Special + 4,
         SquareBrackClose = OperationTypeGroups.Special + 5,
         Push = OperationTypeGroups.Special + 6,
-        GetVariable = OperationTypeGroups.Special + 7,
+        Get = OperationTypeGroups.Special + 7,
         Indirection = OperationTypeGroups.Special + 8
     }
 
@@ -120,7 +120,7 @@ namespace NiL.C.CodeDom.Expressions
             this.operations = operations;
         }
 
-        protected override bool PreBuild(ref CodeNode self, State state)
+        protected override bool Prepare(ref CodeNode self, State state)
         {
             int arn = 0;
             while (operationsStack.Count != 0)
@@ -176,9 +176,9 @@ namespace NiL.C.CodeDom.Expressions
                             arn++;
                             break;
                         }
-                    case OperationType.GetVariable:
+                    case OperationType.Get:
                         {
-                            operationsStack.Peek().Parameter = new EntityAccessExpression(state.GetDeclaration(operationsStack.Peek().Parameter.ToString()));
+                            operationsStack.Peek().Parameter = new EntityAccessExpression(operationsStack.Peek().Parameter.ToString());
                             arn++;
                             break;
                         }
@@ -329,13 +329,13 @@ namespace NiL.C.CodeDom.Expressions
                     {
                         if (refDepth > 0)
                             throw new InvalidOperationException();
-                        operationsStack.Push(new Operation(OperationType.CallOrConvert, name));
+                        operationsStack.Push(new Operation(OperationType.GetOrConvert, name));
                     }
                     else
                     {
                         while (refDepth-- > 0)
                             operationsStack.Push(new Operation(OperationType.Indirection, null));
-                        operationsStack.Push(new Operation(OperationType.GetVariable, name));
+                        operationsStack.Push(new Operation(OperationType.Get, name));
                         unary = false;
                     }
 
@@ -345,7 +345,7 @@ namespace NiL.C.CodeDom.Expressions
                 {
                     case '(':
                         {
-                            if (operationsStack.Peek().Type == OperationType.GetVariable) // вызов
+                            if (operationsStack.Peek().Type == OperationType.Get) // вызов
                             {
                                 //if (!unary)
                                 //    throw new InvalidOperationException("something wrong");
@@ -461,7 +461,7 @@ namespace NiL.C.CodeDom.Expressions
             throw new NotImplementedException();
         }
 
-        protected override bool PreBuild(ref CodeNode self, State state)
+        protected override bool Prepare(ref CodeNode self, State state)
         {
             throw new NotImplementedException();
         }

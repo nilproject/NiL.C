@@ -18,17 +18,17 @@ namespace NiL.C.CodeDom.Declarations
         public virtual CodeBlock Body { get; protected set; }
         public virtual Argument[] Parameters { get; protected set; }
 
-        internal CFunction(CType returnType, Argument[] parameters, string name)
-            : base(new CType(returnType.Name + (parameters.Length > 0 ? "(" + parameters.Aggregate("", (x, y) => x + ", " + y.Type.Name).Substring(2) + ")" : "(void)")), name)
+        internal CFunction(string returnType, Argument[] parameters, string name)
+            : base(returnType + (parameters.Length > 0 ? "(" + parameters.Aggregate("", (x, y) => x + ", " + y.DefinitionTypeName).Substring(2) + ")" : "(void)"), name)
         {
             if (returnType == null)
                 throw new ArgumentNullException();
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException();
-            ReturnType = returnType;
+            returnTypeName = returnType;
             Name = name;
             Parameters = parameters;
-            base.Type.Declaration = this;
+            base.Type = new CType(DefinitionTypeName) { Declaration = this };
         }
 
         internal static ParseResult Parse(State state, string code, ref int index)
@@ -48,44 +48,43 @@ namespace NiL.C.CodeDom.Declarations
             name = code.Substring(i + (code[i] == '(' ? 1 : 0), index - i - (code[i] == '(' ? 1 : 0));
             if (string.IsNullOrEmpty(name))
                 throw new SyntaxError("Invalid symbol name at " + CodeCoordinates.FromTextPosition(code, i, 0));
-            if (state.Declarations.ContainsKey(name))
-                throw new SyntaxError("Try to rediclarate \"" + name + "\" at " + CodeCoordinates.FromTextPosition(code, i, index - i));
             while (char.IsWhiteSpace(code[index])) index++;
 
-
-            var prms = parseParameters(state, code, ref index);
-            if (prms == null)
-                return new ParseResult();
-
-            Definition funcd;
-            CFunction func;
-            if (state.Declarations.TryGetValue(name, out funcd))
+            using (state.Scope)
             {
-                func = (CFunction)funcd;
-                if (func.Body != null)
-                    throw new SyntaxError("Try to redefine \"" + name + "\"");
-                if (prms.Length != func.Parameters.Length || func.ReturnType != (CType)state.GetDeclaration(typeName))
-                    throw new SyntaxError("Invalid signature for \"" + name + "\"");
-                for (var j = 0; j < prms.Length; j++)
+                var prms = parseParameters(state, code, ref index);
+                if (prms == null)
+                    return new ParseResult();
+
+                Definition funcd;
+                CFunction func;
+                if (state.Declarations.TryGetValue(name, out funcd))
                 {
-                    if (prms[i].Type != func.Parameters[i].Type)
+                    func = (CFunction)funcd;
+                    if (func.Body != null)
+                        throw new SyntaxError("Try to redefine \"" + name + "\"");
+                    if (prms.Length != func.Parameters.Length || func.returnTypeName != typeName)
                         throw new SyntaxError("Invalid signature for \"" + name + "\"");
+                    for (var j = 0; j < prms.Length; j++)
+                    {
+                        if (prms[i].Type != func.Parameters[i].Type)
+                            throw new SyntaxError("Invalid signature for \"" + name + "\"");
+                    }
+                    func.Parameters = prms;
                 }
-                func.Parameters = prms;
+                else
+                    state.Declarations[name] = func = new CFunction(typeName, prms, name);
+
+                while (char.IsWhiteSpace(code[index])) index++;
+                if (code[index] == ';')
+                    return new ParseResult() { IsParsed = true, Statement = new CFunction(typeName, prms, name) };
+                var body = Statements.CodeBlock.Parse(state, code, ref index);
+                if (!body.IsParsed)
+                    throw new SyntaxError("Invalid function body at " + CodeCoordinates.FromTextPosition(code, index, 0));
+
+                func.Body = (CodeBlock)body.Statement;
+                return new ParseResult() { IsParsed = true, Statement = func };
             }
-            else
-                state.Declarations[name] = func = new CFunction((CType)state.GetDeclaration(typeName), prms, name);
-
-            while (char.IsWhiteSpace(code[index])) index++;
-            if (code[index] == ';')
-                return new ParseResult() { IsParsed = true, Statement = new CFunction((CType)state.GetDeclaration(typeName), prms, name) };
-            var body = Statements.CodeBlock.Parse(state, code, ref index);
-            if (!body.IsParsed)
-                throw new SyntaxError("Invalid function body at " + CodeCoordinates.FromTextPosition(code, index, 0));
-
-            func.Body = (CodeBlock)body.Statement;
-            return new ParseResult() { IsParsed = true, Statement = func };
-
         }
 
         private static Argument[] parseParameters(State state, string code, ref int index)
@@ -118,7 +117,7 @@ namespace NiL.C.CodeDom.Declarations
                 if (!Parser.ValidateName(true, code, ref index))
                     throw new SyntaxError("Invalid name at " + CodeCoordinates.FromTextPosition(code, index, 0));
                 string name = code.Substring(i, index - i);
-                prms.Add(new Argument((CType)state.GetDeclaration(typeName), name, prms.Count));
+                prms.Add(new Argument(typeName, name, prms.Count + 1));
                 state.DeclareSymbol(prms[prms.Count - 1]);
                 while (char.IsWhiteSpace(code[index])) index++;
             }
@@ -178,13 +177,23 @@ namespace NiL.C.CodeDom.Declarations
             throw new NotImplementedException();
         }
 
-        protected override bool PreBuild(ref CodeNode self, State state)
+        protected override bool Prepare(ref CodeNode self, State state)
         {
-            var b = Body;
-            Body.Prepare(ref b, state);
-            if (Body != b)
-                throw new InvalidOperationException("Something wrong");
-            return false;
+            using (state.Scope)
+            {
+                ReturnType = (CType)state.GetDeclaration(returnTypeName);
+                for (var i = 0; i < Parameters.Length; i++)
+                {
+                    var p = Parameters[i];
+                    p.Prepare(ref p, state);
+                    Parameters[i] = p;
+                }
+                var b = Body;
+                Body.Prepare(ref b, state);
+                if (Body != b)
+                    throw new InvalidOperationException("Something wrong");
+                return false;
+            }
         }
     }
 }

@@ -26,16 +26,15 @@ namespace NiL.C.CodeDom.Declarations
 
         private CLRFunction(CType returnType, string name, MethodInfo methodInfo)
             : base(
-            returnType,
+            returnType.Name,
             methodInfo.GetParameters()
             .Select(x => new Argument(CLRType.Wrap(x.ParameterType), x.Name, x.Position) { IsVarArgArray = x.IsDefined(typeof(ParamArrayAttribute)) })
             .ToArray(),
             name)
         {
-            if (methodInfo == null)
-                throw new ArgumentNullException("methodInfo");
             method = methodInfo;
             Body = new Statements.CodeBlock();
+            this.ReturnType = returnType;
         }
 
         public static CLRFunction CreateFunction(string alias, MethodInfo method)
@@ -68,6 +67,26 @@ namespace NiL.C.CodeDom.Declarations
         internal override MemberInfo GetInfo(Module module)
         {
             return method;
+        }
+
+        protected override bool Prepare(ref CodeNode self, State state)
+        {
+            return false;
+        }
+
+        internal override void Emit(EmitMode mode, MethodBuilder method)
+        {
+            throw new InvalidOperationException();
+        }
+
+        internal override void Bind(MethodBuilder method)
+        {
+            throw new InvalidOperationException();
+        }
+
+        internal override void Emit(ModuleBuilder module)
+        {
+            throw new InvalidOperationException();
         }
     }
 }

@@ -40,5 +40,12 @@ namespace NiL.C.CodeDom.Statements
             }
             method.GetILGenerator().Emit(System.Reflection.Emit.OpCodes.Ret);
         }
+
+        protected override bool Prepare(ref CodeNode self, State state)
+        {
+            if (argument != null)
+                argument.Prepare(ref argument, state);
+            return false;
+        }
     }
 }

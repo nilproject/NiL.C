@@ -17,14 +17,17 @@ namespace NiL.C.CodeDom.Statements
                 return new ParseResult();
             do index++; while (char.IsWhiteSpace(code[index]));
             var lines = new List<CodeNode>();
-            while (code[index] != '}')
+            using (state.Scope)
             {
-                var line = Parser.Parse(state, code, ref index, 1);
-                if (line != null)
+                while (code[index] != '}')
                 {
-                    lines.Add(line);
+                    var line = Parser.Parse(state, code, ref index, 1);
+                    if (line != null)
+                    {
+                        lines.Add(line);
+                    }
+                    while (char.IsWhiteSpace(code[index])) index++;
                 }
-                while (char.IsWhiteSpace(code[index])) index++;
             }
             index++;
             return new ParseResult()
@@ -40,11 +43,14 @@ namespace NiL.C.CodeDom.Statements
                 Lines[i].Emit(EmitMode.SetOrNone, method);
         }
 
-        protected override bool PreBuild(ref CodeNode self, State state)
+        protected override bool Prepare(ref CodeNode self, State state)
         {
-            for (var i = 0; i < Lines.Length; i++)
-                Lines[i].Prepare(ref Lines[i], state);
-            return false;
+            using (state.Scope)
+            {
+                for (var i = 0; i < Lines.Length; i++)
+                    Lines[i].Prepare(ref Lines[i], state);
+                return false;
+            }
         }
     }
 }
