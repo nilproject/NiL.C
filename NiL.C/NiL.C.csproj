@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{53FBECB2-25B4-4B49-96A6-7D19CDB420BA}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>NiL.C</RootNamespace>
+    <AssemblyName>NiL.C</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CodeDom\CodeNode.cs" />
+    <Compile Include="CodeDom\CSpace.cs" />
+    <Compile Include="CodeDom\Declarations\CLRFunction.cs" />
+    <Compile Include="CodeDom\Declarations\CLRType.cs" />
+    <Compile Include="CodeDom\Declarations\Definition.cs" />
+    <Compile Include="CodeDom\Declarations\CFunction.cs" />
+    <Compile Include="CodeDom\Declarations\GenericType.cs" />
+    <Compile Include="CodeDom\Declarations\Argument.cs" />
+    <Compile Include="CodeDom\Declarations\Variable.cs" />
+    <Compile Include="CodeDom\Declarations\Entity.cs" />
+    <Compile Include="CodeDom\Declarations\CType.cs" />
+    <Compile Include="CodeDom\Expressions\Addition.cs" />
+    <Compile Include="CodeDom\Expressions\And.cs" />
+    <Compile Include="CodeDom\Expressions\ArrayExpression.cs" />
+    <Compile Include="CodeDom\Expressions\Assign.cs" />
+    <Compile Include="CodeDom\Expressions\Call.cs" />
+    <Compile Include="CodeDom\Expressions\Constant.cs" />
+    <Compile Include="CodeDom\Expressions\Decriment.cs" />
+    <Compile Include="CodeDom\Expressions\Indirection.cs" />
+    <Compile Include="CodeDom\Expressions\GetPointer.cs" />
+    <Compile Include="CodeDom\Expressions\Delete.cs" />
+    <Compile Include="CodeDom\Expressions\Division.cs" />
+    <Compile Include="CodeDom\Expressions\Equal.cs" />
+    <Compile Include="CodeDom\Expressions\Expression.cs" />
+    <Compile Include="CodeDom\Expressions\GetMemberExpression.cs" />
+    <Compile Include="CodeDom\Expressions\NamedEntityExpression.cs" />
+    <Compile Include="CodeDom\Expressions\Incriment.cs" />
+    <Compile Include="CodeDom\Expressions\Less.cs" />
+    <Compile Include="CodeDom\Expressions\LessOrEqual.cs" />
+    <Compile Include="CodeDom\Expressions\LogicalAnd.cs" />
+    <Compile Include="CodeDom\Expressions\LogicalNot.cs" />
+    <Compile Include="CodeDom\Expressions\LogicalOr.cs" />
+    <Compile Include="CodeDom\Expressions\Mod.cs" />
+    <Compile Include="CodeDom\Expressions\More.cs" />
+    <Compile Include="CodeDom\Expressions\MoreOrEqual.cs" />
+    <Compile Include="CodeDom\Expressions\Mul.cs" />
+    <Compile Include="CodeDom\Expressions\Neg.cs" />
+    <Compile Include="CodeDom\Expressions\New.cs" />
+    <Compile Include="CodeDom\Expressions\None.cs" />
+    <Compile Include="CodeDom\Expressions\Not.cs" />
+    <Compile Include="CodeDom\Expressions\NotEqual.cs" />
+    <Compile Include="CodeDom\Expressions\Or.cs" />
+    <Compile Include="CodeDom\Expressions\SignedShiftLeft.cs" />
+    <Compile Include="CodeDom\Expressions\SignedShiftRight.cs" />
+    <Compile Include="CodeDom\Expressions\StringConcat.cs" />
+    <Compile Include="CodeDom\Expressions\Substract.cs" />
+    <Compile Include="CodeDom\Expressions\Ternary.cs" />
+    <Compile Include="CodeDom\Expressions\Xor.cs" />
+    <Compile Include="CodeDom\Parser.cs" />
+    <Compile Include="CodeDom\Statements\CodeBlock.cs" />
+    <Compile Include="CodeDom\Statements\Return.cs" />
+    <Compile Include="CodeDom\Statements\Statement.cs" />
+    <Compile Include="CodeDom\Statements\VariableDeclaration.cs" />
+    <Compile Include="CodeDom\SyntaxError.cs" />
+    <Compile Include="CodeDom\Tools.cs" />
+    <Compile Include="Compiler.cs" />
+    <Compile Include="TypeTools.cs" />
+    <Compile Include="EmbeddedEntities.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
