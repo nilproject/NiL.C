@@ -11,8 +11,9 @@ namespace NiL.C
     {
         public static readonly Dictionary<string, Definition> Declarations = new Dictionary<string, Definition>
         {
-            { "char", new CLRType("char", typeof(sbyte)) },
-            { "unsigned char", new CLRType("unsigned char", typeof(byte)) },
+            { "char", new CLRType("char", typeof(byte)) },
+            { "unsigned char", CLRType.Wrap(typeof(byte)) },
+            { "signed char", new CLRType("signed char", typeof(sbyte)) },
             { "wchar_t", new CLRType("wchar_t", typeof(char)) },
             { "short", new CLRType("short", typeof(short)) },
             { "unsigned short", new CLRType("unsigned short", typeof(ushort)) },
@@ -34,7 +35,12 @@ namespace NiL.C
             Declarations.Add("printf",
                 CLRFunction.CreateFunction(
                 "printf",
-                typeof(System.Console).GetMethod("Write", new[] { typeof(string), typeof(object[]) })
+                typeof(NCRuntime.Stdio).GetMethod("printf")
+                ));
+            Declarations.Add("lmax",
+                CLRFunction.CreateFunction(
+                "lmax",
+                typeof(NCRuntime.ExtMath).GetMethod("lmax")
                 ));
         }
 

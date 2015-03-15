@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace NiL.C
 {
-    internal static class TypeTools
+    internal static class EmitHelpers
     {
         private static readonly MethodInfo WCSTRtoString = new Func<IntPtr, string>(Marshal.PtrToStringUni).Method;
         private static readonly MethodInfo CSTRtoString = new Func<IntPtr, string>(Marshal.PtrToStringAnsi).Method;
@@ -25,18 +25,24 @@ namespace NiL.C
             }
             if (dest == typeof(string))
             {
-                if (source == typeof(char*)
-                 || source == typeof(short*)
-                 || source == typeof(ushort*))
+                if (source == typeof(char*)) // wchar_t
                 {
                     generator.Emit(OpCodes.Call, WCSTRtoString);
                     return true;
                 }
 
-                if (source == typeof(byte*)
-                 || source == typeof(sbyte*))
+                if (source == typeof(byte*)) // char
                 {
                     generator.Emit(OpCodes.Call, CSTRtoString);
+                    return true;
+                }
+            }
+            if (dest == typeof(object))
+            {
+                if (source.IsPointer)
+                {
+                    generator.Emit(OpCodes.Conv_I);
+                    generator.Emit(OpCodes.Box, typeof(IntPtr));
                     return true;
                 }
             }
@@ -45,12 +51,14 @@ namespace NiL.C
 
         internal static bool IsCompatible(Type sourceType, Type destType)
         {
+            if (sourceType == destType)
+                return true;
             if (destType.IsValueType != sourceType.IsValueType)
+                return false;
+            if (sourceType.IsPointer != destType.IsPointer)
                 return false;
             if (destType.IsAssignableFrom(sourceType))
                 return true;
-            if (sourceType.IsPointer != destType.IsPointer)
-                return false;
             else if (sourceType.IsPointer)
                 return true;
             var sTypeCode = Type.GetTypeCode(sourceType);
@@ -98,6 +106,61 @@ namespace NiL.C
                     return sizeof(ulong);
                 default:
                     return Marshal.SizeOf(type);
+            }
+        }
+
+        internal static void EmitPushConstant_I4(ILGenerator generator, int value)
+        {
+            switch (value)
+            {
+                case 0:
+                    {
+                        generator.Emit(OpCodes.Ldc_I4_0);
+                        break;
+                    }
+                case 1:
+                    {
+                        generator.Emit(OpCodes.Ldc_I4_1);
+                        break;
+                    }
+                case 2:
+                    {
+                        generator.Emit(OpCodes.Ldc_I4_2);
+                        break;
+                    }
+                case 3:
+                    {
+                        generator.Emit(OpCodes.Ldc_I4_3);
+                        break;
+                    }
+                case 4:
+                    {
+                        generator.Emit(OpCodes.Ldc_I4_4);
+                        break;
+                    }
+                case 5:
+                    {
+                        generator.Emit(OpCodes.Ldc_I4_5);
+                        break;
+                    }
+                case 6:
+                    {
+                        generator.Emit(OpCodes.Ldc_I4_6);
+                        break;
+                    }
+                case 7:
+                    {
+                        generator.Emit(OpCodes.Ldc_I4_7);
+                        break;
+                    }
+                case 8:
+                    {
+                        generator.Emit(OpCodes.Ldc_I4_8);
+                        break;
+                    }
+                default:
+                    generator.Emit(OpCodes.Ldc_I4, (int)value);
+                    break;
             }
         }
     }

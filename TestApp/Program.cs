@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,30 +10,22 @@ using NiL.C;
 
 namespace TestApp
 {
-    class Program
+    unsafe class Program
     {
         static void Main(string[] args)
         {
             Compiler.CompileAndSave(@"
 void main(void)
 {
-    printf(""{0}"", 1 + 2 * 3);
+    lmax(1,2,3,4,5);
 }
 ", "TestC", System.Reflection.Emit.PEFileKinds.ConsoleApplication);
-            //var method = assembly.GetType("<Generated>_entryPointWrapper").GetMethod("Main", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-            //method.Invoke(null, new string[][] { null });
+            Assembly.LoadFile(Environment.CurrentDirectory + "\\testc.exe").GetModules()[0].GetMethod("main").Invoke(null, null);
         }
 
         unsafe void main()
         {
-            var a = 1;
-            var b = 2;
-            a++;
-            var pa = &a;
-            var pb = &b;
-            pa = pa + 1;
-            var ppa = &pa;
-            ppa += a;
+            NCRuntime.ExtMath.lmax(1, 2, 3, 4, 5);
         }
     }
 }

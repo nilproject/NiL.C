@@ -43,7 +43,7 @@ namespace NiL.C.CodeDom.Declarations
         public virtual CType TargetType { get; internal set; }
         public virtual bool IsGeneric { get; internal set; }
         public virtual bool IsCallable { get; internal set; }
-        public virtual Definition Declaration { get; internal set; }
+        public virtual Definition Definition { get; internal set; }
 
         internal CType(string name)
         {

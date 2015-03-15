@@ -100,6 +100,7 @@
     <Compile Include="CodeDom\Expressions\Equal.cs" />
     <Compile Include="CodeDom\Expressions\Expression.cs" />
     <Compile Include="CodeDom\Expressions\GetMemberExpression.cs" />
+    <Compile Include="CodeDom\Expressions\IWantToGetType.cs" />
     <Compile Include="CodeDom\Expressions\NamedEntityExpression.cs" />
     <Compile Include="CodeDom\Expressions\Incriment.cs" />
     <Compile Include="CodeDom\Expressions\Less.cs" />
@@ -131,9 +132,15 @@
     <Compile Include="CodeDom\SyntaxError.cs" />
     <Compile Include="CodeDom\Tools.cs" />
     <Compile Include="Compiler.cs" />
-    <Compile Include="TypeTools.cs" />
+    <Compile Include="EmitHelpers.cs" />
     <Compile Include="EmbeddedEntities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NCRuntime\NCRuntime.csproj">
+      <Project>{180ba7d7-2d9f-40b1-9e52-12feb754b80f}</Project>
+      <Name>NCRuntime</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

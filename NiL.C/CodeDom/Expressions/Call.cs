@@ -48,65 +48,114 @@ namespace NiL.C.CodeDom.Expressions
             if (!(first is EntityAccessExpression))
                 throw new ArgumentException();
             var cfunc = (first as EntityAccessExpression).Declaration as CFunction;
-            var info = cfunc.GetInfo(method.Module);
+            var info = cfunc.GetInfo(method.Module) as MethodInfo;
             if (cfunc == null)
                 throw new ArgumentException();
+            if ((info.ReturnType == typeof(void)) && (mode == EmitMode.Get))
+                throw new InvalidOperationException();
             var prms = cfunc.Parameters;
             var generator = method.GetILGenerator();
             for (var i = 0; i < prms.Length; i++)
             {
+                var targetType = prms[i].Type.GetInfo(method.Module) as Type;
                 if (arguments.Length <= i)
                 {
-                    if ((prms[i].Type.GetInfo(method.Module) as Type).IsArray && prms[i].IsVarArgArray)
+                    if (targetType.IsArray && prms[i].IsVarArgArray)
                     {
                         generator.Emit(OpCodes.Ldc_I4, 0);
-                        generator.Emit(OpCodes.Newarr, (prms[i].Type.GetInfo(method.Module) as Type).GetElementType());
+                        generator.Emit(OpCodes.Newarr, targetType.GetElementType());
                     }
                     else
                         throw new NotImplementedException();
                 }
                 else
                 {
-                    if ((prms[i].Type.GetInfo(method.Module) as Type).IsArray && prms[i].IsVarArgArray)
+                    if (targetType.IsArray && prms[i].IsVarArgArray)
                     {
-                        var etype = (prms[i].Type.GetInfo(method.Module) as Type).GetElementType();
-                        generator.Emit(OpCodes.Ldc_I4, arguments.Length - i);
+                        var etype = targetType.GetElementType();
+                        EmitHelpers.EmitPushConstant_I4(generator, arguments.Length - i);
                         generator.Emit(OpCodes.Newarr, etype);
                         var index = 0;
                         for (; i < arguments.Length; i++, index++)
                         {
                             generator.Emit(OpCodes.Dup);
-                            generator.Emit(OpCodes.Ldc_I4, index);
+                            EmitHelpers.EmitPushConstant_I4(generator, index);
 
+                            if (arguments[i] is IWantToGetType)
+                                (arguments[i] as IWantToGetType).SetType(etype);
                             arguments[i].Emit(EmitMode.Get, method);
-                            var resultType = (Type)arguments[i].ResultType.GetInfo(method.Module);
-                            if (!TypeTools.IsCompatible(resultType, etype)
-                                && !TypeTools.EmitConvert(method.GetILGenerator(), resultType, etype))
-                                throw new ArgumentException("Can not convert " + resultType + " to " + etype);
-                            if (etype == typeof(object))
+                            var argType = (Type)arguments[i].ResultType.GetInfo(method.Module);
+                            if (!EmitHelpers.IsCompatible(argType, etype)
+                                && !EmitHelpers.EmitConvert(method.GetILGenerator(), argType, etype))
+                                throw new ArgumentException("Can not convert " + argType + " to " + etype);
+                            if (!etype.IsValueType)
                                 generator.Emit(OpCodes.Stelem_Ref);
                             else
-                                generator.Emit(OpCodes.Stelem, etype);
+                            {
+                                switch (Type.GetTypeCode(etype))
+                                {
+                                    case TypeCode.Byte:
+                                    case TypeCode.SByte:
+                                        {
+                                            generator.Emit(OpCodes.Stelem_I1);
+                                            break;
+                                        }
+                                    case TypeCode.Int16:
+                                    case TypeCode.UInt16:
+                                        {
+                                            generator.Emit(OpCodes.Stelem_I2);
+                                            break;
+                                        }
+                                    case TypeCode.Int32:
+                                    case TypeCode.UInt32:
+                                        {
+                                            generator.Emit(OpCodes.Stelem_I4);
+                                            break;
+                                        }
+                                    case TypeCode.Int64:
+                                    case TypeCode.UInt64:
+                                        {
+                                            generator.Emit(OpCodes.Stelem_I8);
+                                            break;
+                                        }
+                                    case TypeCode.Single:
+                                        {
+                                            generator.Emit(OpCodes.Stelem_R4);
+                                            break;
+                                        }
+                                    case TypeCode.Double:
+                                        {
+                                            generator.Emit(OpCodes.Stelem_R8);
+                                            break;
+                                        }
+                                    default:
+                                        generator.Emit(OpCodes.Stelem, etype);
+                                        break;
+                                }
+                            }
                         }
                     }
                     else
                     {
-                        //method.GetILGenerator().Emit(OpCodes.Ldstr, "test");
+                        if (arguments[i] is IWantToGetType)
+                            (arguments[i] as IWantToGetType).SetType(targetType);
                         arguments[i].Emit(EmitMode.Get, method);
-                        var resultType = (Type)arguments[i].ResultType.GetInfo(method.Module);
-                        if (!TypeTools.IsCompatible(resultType, prms[i].Type.GetInfo(method.Module) as Type)
-                            && !TypeTools.EmitConvert(method.GetILGenerator(), resultType, prms[i].Type.GetInfo(method.Module) as Type))
-                            throw new ArgumentException("Can not convert " + resultType + " to " + prms[i].Type.GetInfo(method.Module));
+                        var argType = (Type)arguments[i].ResultType.GetInfo(method.Module);
+                        if (!EmitHelpers.IsCompatible(argType, targetType)
+                            && !EmitHelpers.EmitConvert(method.GetILGenerator(), argType, targetType))
+                            throw new ArgumentException("Can not convert " + argType + " to " + prms[i].Type.GetInfo(method.Module));
                     }
                 }
             }
-            method.GetILGenerator().Emit(OpCodes.Call, info as MethodInfo);
+            generator.Emit(OpCodes.Call, info as MethodInfo);
+            if (info.ReturnType != typeof(void) && mode != EmitMode.Get)
+                generator.Emit(OpCodes.Pop);
         }
 
         protected override bool Prepare(ref CodeNode self, State state)
         {
             first.Prepare(ref first, state);
-            for (var i = 0; i < arguments.Length; i++)
+            for (int i = 0; i < arguments.Length; i++)
             {
                 var a = arguments[i];
                 a.Prepare(ref a, state);

@@ -71,7 +71,7 @@ namespace NiL.C.CodeDom.Expressions
                 else
                 {
                     var ttype = (Type)type.TargetType.GetInfo(method.Module);
-                    var size = TypeTools.sizeOf(ttype);
+                    var size = EmitHelpers.sizeOf(ttype);
                     if (size != 1)
                     {
                         method.GetILGenerator().Emit(OpCodes.Ldc_I4, size);

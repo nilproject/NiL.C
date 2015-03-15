@@ -34,8 +34,8 @@ namespace NiL.C.CodeDom.Statements
             if (argument != null)
             {
                 argument.Emit(EmitMode.Get, method);
-                if (!TypeTools.IsCompatible((Type)argument.ResultType.GetInfo(method.Module), method.ReturnType)
-                    && !TypeTools.EmitConvert(method.GetILGenerator(), (Type)argument.ResultType.GetInfo(method.Module), method.ReturnType))
+                if (!EmitHelpers.IsCompatible((Type)argument.ResultType.GetInfo(method.Module), method.ReturnType)
+                    && !EmitHelpers.EmitConvert(method.GetILGenerator(), (Type)argument.ResultType.GetInfo(method.Module), method.ReturnType))
                     throw new ArgumentException("Invalid return value (" + method + ")");
             }
             method.GetILGenerator().Emit(System.Reflection.Emit.OpCodes.Ret);

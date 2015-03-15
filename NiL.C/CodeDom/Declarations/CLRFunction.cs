@@ -47,6 +47,11 @@ namespace NiL.C.CodeDom.Declarations
                         returntype = (CType)EmbeddedEntities.Declarations["void"];
                         break;
                     }
+                case TypeCode.Int32:
+                    {
+                        returntype = (CType)EmbeddedEntities.Declarations["int"];
+                        break;
+                    }
                 case TypeCode.Object:
                     {
                         if (method.ReturnType == typeof(void))

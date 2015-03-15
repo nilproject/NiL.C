@@ -88,5 +88,12 @@ namespace NiL.C.CodeDom.Declarations
             state.DeclareSymbol(this);
             return false;
         }
+
+        public override string ToString()
+        {
+            if (IsVarArgArray)
+                return "params " + base.ToString();
+            return base.ToString();
+        }
     }
 }

@@ -28,7 +28,7 @@ namespace NiL.C.CodeDom.Declarations
             returnTypeName = returnType;
             Name = name;
             Parameters = parameters;
-            base.Type = new CType(DefinitionTypeName) { Declaration = this };
+            base.Type = new CType(DefinitionTypeName) { Definition = this };
         }
 
         internal static ParseResult Parse(State state, string code, ref int index)

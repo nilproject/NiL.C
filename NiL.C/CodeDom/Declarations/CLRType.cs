@@ -25,7 +25,7 @@ namespace NiL.C.CodeDom.Declarations
 
             }
         }
-        
+
         public override CTypeCode TypeCode
         {
             get
@@ -35,25 +35,25 @@ namespace NiL.C.CodeDom.Declarations
                 switch (Type.GetTypeCode(proto))
                 {
                     case System.TypeCode.Byte: // UChar
-                            return CTypeCode.UChar;
+                        return CTypeCode.UChar;
                     case System.TypeCode.SByte:
-                            return CTypeCode.Char;
+                        return CTypeCode.Char;
                     case System.TypeCode.UInt16:
-                            return CTypeCode.UShort;
+                        return CTypeCode.UShort;
                     case System.TypeCode.Int16:
-                            return CTypeCode.Short;
+                        return CTypeCode.Short;
                     case System.TypeCode.UInt32:
-                            return CTypeCode.UInt;
+                        return CTypeCode.UInt;
                     case System.TypeCode.Int32:
-                            return CTypeCode.Int;
+                        return CTypeCode.Int;
                     case System.TypeCode.UInt64:
-                            return CTypeCode.ULong;
+                        return CTypeCode.ULong;
                     case System.TypeCode.Int64:
-                            return CTypeCode.Long;
+                        return CTypeCode.Long;
                     case System.TypeCode.Single:
-                            return CTypeCode.Float;
+                        return CTypeCode.Float;
                     case System.TypeCode.Double:
-                            return CTypeCode.Double;
+                        return CTypeCode.Double;
                     default:
                         return CTypeCode.Object;
                 }
@@ -79,7 +79,7 @@ namespace NiL.C.CodeDom.Declarations
             }
             internal set
             {
-                
+
             }
         }
 
@@ -111,7 +111,7 @@ namespace NiL.C.CodeDom.Declarations
         public override CType MakePointerType()
         {
             if (refernceTypeCache == null)
-                refernceTypeCache = new CLRType(Name + "*", proto.MakePointerType());
+                refernceTypeCache = CLRType.Wrap(proto.MakePointerType());
             return refernceTypeCache;
         }
     }
