@@ -12,21 +12,23 @@ namespace NiL.C.CodeDom.Expressions
     internal enum OperationTypeGroups : int
     {
         None = 0x0,
-        Assign = 0x10,
-        Choice = 0x20,
-        LOr = 0x30,
-        LAnd = 0x40,
-        Or = 0x50,
-        Xor = 0x60,
-        And = 0x70,
-        Logic1 = 0x80,
-        Logic2 = 0x90,
-        Bit = 0xa0,
-        Arithmetic0 = 0xb0,
-        Arithmetic1 = 0xc0,
-        Unary0 = 0xd0,
-        Unary1 = 0xe0,
-        Special = 0xF0
+        Postfix = 0x100,
+        Unary1 = 0x200,
+        Unary2 = 0x300,
+        Multiplicative = 0x400,
+        Additive = 0x500,
+        BitwiseShift = 0x600,
+        Relational = 0x700,
+        Equality = 0x800,
+        BitwiseAnd = 0x900,
+        BitwiseXor = 0xa00,
+        BitwiseOr = 0xb00,
+        LogicalAnd = 0xc00,
+        LogicalOr = 0xd00,
+        Condition = 0xe00,
+        Assignment = 0xf00,
+        Comma = 0x1000,
+        Special = 0xff00
     }
 
 #if !PORTABLE
@@ -34,59 +36,64 @@ namespace NiL.C.CodeDom.Expressions
 #endif
     internal enum OperationType : int
     {
-        None = OperationTypeGroups.None + 0,
-        Assign = OperationTypeGroups.Assign + 0,
-        Ternary = OperationTypeGroups.Choice + 0,
+        None = 0,
 
-        LogicalOr = OperationTypeGroups.LOr,
-        LogicalAnd = OperationTypeGroups.LAnd,
-        Or = OperationTypeGroups.Or,
-        Xor = OperationTypeGroups.Xor,
-        And = OperationTypeGroups.And,
+        Index = OperationTypeGroups.Postfix + 1,
+        Call = OperationTypeGroups.Postfix + 2,
+        GetMember = OperationTypeGroups.Postfix + 3,
+        IndirectGetMember = OperationTypeGroups.Postfix + 4,
+        PostIncriment = OperationTypeGroups.Postfix + 5,
+        PostDecriment = OperationTypeGroups.Postfix + 6,
 
-        Equal = OperationTypeGroups.Logic1 + 0,
-        NotEqual = OperationTypeGroups.Logic1 + 1,
-        StrictEqual = OperationTypeGroups.Logic1 + 2,
-        StrictNotEqual = OperationTypeGroups.Logic1 + 3,
+        PreIncriment = OperationTypeGroups.Unary1 + 1,
+        PreDecriment = OperationTypeGroups.Unary1 + 2,
+        SizeOf = OperationTypeGroups.Unary1 + 3,
+        GetPointer = OperationTypeGroups.Unary1 + 4,
+        Indirection = OperationTypeGroups.Unary1 + 5,
+        Positive = OperationTypeGroups.Unary1 + 6,
+        Negation = OperationTypeGroups.Unary1 + 7,
+        BitwiseNegation = OperationTypeGroups.Unary1 + 8,
+        LogicalNegation = OperationTypeGroups.Unary1 + 9,
 
-        InstanceOf = OperationTypeGroups.Logic2 + 0,
-        In = OperationTypeGroups.Logic2 + 1,
-        More = OperationTypeGroups.Logic2 + 2,
-        Less = OperationTypeGroups.Logic2 + 3,
-        MoreOrEqual = OperationTypeGroups.Logic2 + 4,
-        LessOrEqual = OperationTypeGroups.Logic2 + 5,
+        Cast = OperationTypeGroups.Unary2 + 1,
 
-        SignedShiftLeft = OperationTypeGroups.Bit + 0,
-        SignedShiftRight = OperationTypeGroups.Bit + 1,
-        UnsignedShiftRight = OperationTypeGroups.Bit + 2,
+        Multiplicate = OperationTypeGroups.Multiplicative + 1,
+        Division = OperationTypeGroups.Multiplicative + 2,
+        Module = OperationTypeGroups.Multiplicative + 3,
 
-        Addition = OperationTypeGroups.Arithmetic0 + 0,
-        Substract = OperationTypeGroups.Arithmetic0 + 1,
-        Multiply = OperationTypeGroups.Arithmetic1 + 0,
-        Module = OperationTypeGroups.Arithmetic1 + 1,
-        Division = OperationTypeGroups.Arithmetic1 + 2,
+        Addition = OperationTypeGroups.Additive + 1,
+        Substraction = OperationTypeGroups.Additive + 2,
 
-        Negative = OperationTypeGroups.Unary0 + 0,
-        Positive = OperationTypeGroups.Unary0 + 1,
-        LogicalNot = OperationTypeGroups.Unary0 + 2,
-        Not = OperationTypeGroups.Unary0 + 3,
-        TypeOf = OperationTypeGroups.Unary0 + 4,
-        Delete = OperationTypeGroups.Unary0 + 5,
-        GetPointer = OperationTypeGroups.Unary0 + 6,
+        ShiftLeft = OperationTypeGroups.BitwiseShift + 1,
+        ShiftRight = OperationTypeGroups.BitwiseShift + 2,
 
-        Incriment = OperationTypeGroups.Unary1 + 0,
-        Decriment = OperationTypeGroups.Unary1 + 1,
+        Less = OperationTypeGroups.Relational + 1,
+        More = OperationTypeGroups.Relational + 2,
+        LessOrEqual = OperationTypeGroups.Relational + 3,
+        MoreOrEqual = OperationTypeGroups.Relational + 4,
 
-        Call = OperationTypeGroups.Special + 0,
-        New = OperationTypeGroups.Special + 1,
-        GetOrConvert = OperationTypeGroups.Special + 2,
+        Equal = OperationTypeGroups.Equality + 1,
+        NotEqual = OperationTypeGroups.Equality + 2,
 
-        BrackOpen = OperationTypeGroups.Special + 3,
-        SquareBrackOpen = OperationTypeGroups.Special + 4,
-        SquareBrackClose = OperationTypeGroups.Special + 5,
-        Push = OperationTypeGroups.Special + 6,
-        Get = OperationTypeGroups.Special + 7,
-        Indirection = OperationTypeGroups.Special + 8
+        BitwiseAnd = OperationTypeGroups.BitwiseAnd + 1,
+
+        BitwiseOr = OperationTypeGroups.BitwiseOr + 1,
+
+        Condition = OperationTypeGroups.Condition + 1,
+
+        Assign = OperationTypeGroups.Assignment + 1,
+        MulAssign = OperationTypeGroups.Assignment + 2,
+        DivAssign = OperationTypeGroups.Assignment + 3,
+        ModAssign = OperationTypeGroups.Assignment + 4,
+        AddAssign = OperationTypeGroups.Assignment + 5,
+        SubAssign = OperationTypeGroups.Assignment + 6,
+        ShlAssign = OperationTypeGroups.Assignment + 7,
+        ShrAssign = OperationTypeGroups.Assignment + 8,
+        AndAssign = OperationTypeGroups.Assignment + 9,
+        XorAssign = OperationTypeGroups.Assignment + 10,
+        OrAssign = OperationTypeGroups.Assignment + 11,
+
+        Comma = OperationTypeGroups.Comma + 1,
     }
 
     internal sealed class Operation
@@ -205,10 +212,10 @@ namespace NiL.C.CodeDom.Expressions
                             arn--;
                             break;
                         }
-                    case OperationType.Incriment:
+                    case OperationType.Increment:
                         {
                             var operation = operationsStack.Pop();
-                            operation.Parameter = new Incriment((Expression)operationsStack.Pop().Parameter, (Incriment.Type)operation.Parameter);
+                            operation.Parameter = new Increment((Expression)operationsStack.Pop().Parameter, (Increment.Type)operation.Parameter);
                             operationsStack.Push(operation);
                             break;
                         }
@@ -380,12 +387,12 @@ namespace NiL.C.CodeDom.Expressions
                                 if (!unary) // operand already in stack
                                 {
                                     var t = operationsStack.Pop();
-                                    operationsStack.Push(new Operation(OperationType.Incriment, Incriment.Type.Postincriment));
+                                    operationsStack.Push(new Operation(OperationType.Incriment, Increment.Type.Postincriment));
                                     operationsStack.Push(t);
                                 }
                                 else
                                 {
-                                    operationsStack.Push(new Operation(OperationType.Incriment, Incriment.Type.Preincriment));
+                                    operationsStack.Push(new Operation(OperationType.Incriment, Increment.Type.Preincriment));
                                 }
                                 index++;
                             }
@@ -427,7 +434,9 @@ namespace NiL.C.CodeDom.Expressions
                             }
                             else
                             {
-                                throw new NotImplementedException();
+                                popIfNeed(operationsStack, operations, OperationType.Multiplicate);
+                                operationsStack.Push(new Operation(OperationType.Multiplicate, null));
+                                unary = true;
                             }
                             do index++; while (char.IsWhiteSpace(code[index]));
                             break;
@@ -436,6 +445,8 @@ namespace NiL.C.CodeDom.Expressions
                         {
                             if (!processComma)
                                 goto case ';';
+                            popIfNeed(operationsStack, operations, OperationType.Comma);
+                            unary = true;
                             do index++; while (char.IsWhiteSpace(code[index]));
                             break;
                         }
@@ -454,6 +465,13 @@ namespace NiL.C.CodeDom.Expressions
                 IsParsed = true,
                 Statement = new ParsedExpression(operationsStack, operations)
             };
+        }
+
+        private static void popIfNeed(Stack<Operation> operationsStack, List<Operation> operations, OperationType operation)
+        {
+            while (operationsStack.Count > 0
+                && ((int)operationsStack.Peek().Type & (int)OperationTypeGroups.Special) > ((int)operation & (int)OperationTypeGroups.Special))
+                operations.Add(operationsStack.Pop());
         }
 
         internal override void Emit(EmitMode mode, System.Reflection.Emit.MethodBuilder method)

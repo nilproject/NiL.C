@@ -17,14 +17,22 @@ namespace TestApp
             Compiler.CompileAndSave(@"
 void main(void)
 {
-    lmax(1,2,3,4,5);
+    printf(""%i %i"", 2 + 2 * 2, 2 * 2 + 2)
 }
 ", "TestC", System.Reflection.Emit.PEFileKinds.ConsoleApplication);
             Assembly.LoadFile(Environment.CurrentDirectory + "\\testc.exe").GetModules()[0].GetMethod("main").Invoke(null, null);
         }
 
+        struct Struct
+        {
+            public int i;
+            public char* t;
+        }
+
         unsafe void main()
         {
+            var s = new Struct();
+            var ps = &s;
             NCRuntime.ExtMath.lmax(1, 2, 3, 4, 5);
         }
     }

@@ -92,7 +92,7 @@
     <Compile Include="CodeDom\Expressions\Assign.cs" />
     <Compile Include="CodeDom\Expressions\Call.cs" />
     <Compile Include="CodeDom\Expressions\Constant.cs" />
-    <Compile Include="CodeDom\Expressions\Decriment.cs" />
+    <Compile Include="CodeDom\Expressions\Decrement.cs" />
     <Compile Include="CodeDom\Expressions\Indirection.cs" />
     <Compile Include="CodeDom\Expressions\GetPointer.cs" />
     <Compile Include="CodeDom\Expressions\Delete.cs" />
@@ -102,7 +102,7 @@
     <Compile Include="CodeDom\Expressions\GetMemberExpression.cs" />
     <Compile Include="CodeDom\Expressions\IWantToGetType.cs" />
     <Compile Include="CodeDom\Expressions\NamedEntityExpression.cs" />
-    <Compile Include="CodeDom\Expressions\Incriment.cs" />
+    <Compile Include="CodeDom\Expressions\Increment.cs" />
     <Compile Include="CodeDom\Expressions\Less.cs" />
     <Compile Include="CodeDom\Expressions\LessOrEqual.cs" />
     <Compile Include="CodeDom\Expressions\LogicalAnd.cs" />

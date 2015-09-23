@@ -9,7 +9,7 @@ namespace NiL.C.CodeDom.Expressions
 #if !PORTABLE
     [Serializable]
 #endif
-    internal sealed class Incriment : Expression
+    internal sealed class Increment : Expression
     {
         public enum Type
         {
@@ -25,7 +25,7 @@ namespace NiL.C.CodeDom.Expressions
             }
         }
 
-        public Incriment(Expression op, Type type)
+        public Increment(Expression op, Type type)
             : base(op, type == Type.Postincriment ? op : null)
         {
             if (type > Type.Postincriment)
