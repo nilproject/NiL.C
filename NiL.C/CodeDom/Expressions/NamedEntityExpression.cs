@@ -14,8 +14,6 @@ namespace NiL.C.CodeDom.Expressions
     {
         public Definition Declaration { get; private set; }
 
-        public string Name { get; private set; }
-
         public override CType ResultType
         {
             get
@@ -32,9 +30,9 @@ namespace NiL.C.CodeDom.Expressions
             }
         }
 
-        internal EntityAccessExpression(string name)
+        internal EntityAccessExpression(Definition declaration)
         {
-            Name = name;
+            Declaration = declaration;
         }
 
         public override string ToString()
@@ -64,11 +62,8 @@ namespace NiL.C.CodeDom.Expressions
             }
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
-            if (Declaration != null)
-                throw new InvalidOperationException();
-            Declaration = state.GetDeclaration(Name);
             return false;
         }
     }

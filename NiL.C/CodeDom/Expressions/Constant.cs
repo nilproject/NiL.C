@@ -93,12 +93,11 @@ namespace NiL.C.CodeDom.Expressions
                     case TypeCode.String:
                         {
                             method.GetILGenerator().Emit(OpCodes.Ldstr, Value.ToString());
-                            if (preferedType != typeof(string)
-                                && preferedType != typeof(object))
+                            if (preferedType != typeof(string) && preferedType != typeof(object))
                             {
                                 if (IntPtr.Size == 4)
                                 {
-                                    method.GetILGenerator().Emit(OpCodes.Ldc_I4, System.Runtime.CompilerServices.RuntimeHelpers.OffsetToStringData + 4);
+                                    method.GetILGenerator().Emit(OpCodes.Ldc_I4, System.Runtime.CompilerServices.RuntimeHelpers.OffsetToStringData);
                                     method.GetILGenerator().Emit(OpCodes.Add);
                                 }
                                 else if (IntPtr.Size == 8)
@@ -116,7 +115,7 @@ namespace NiL.C.CodeDom.Expressions
                 }
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
             return false;
         }

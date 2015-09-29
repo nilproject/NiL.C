@@ -17,7 +17,7 @@ namespace NiL.C.CodeDom.Statements
             Emit(method);
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
             throw new NotImplementedException();
         }

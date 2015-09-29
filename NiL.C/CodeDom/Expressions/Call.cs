@@ -152,13 +152,13 @@ namespace NiL.C.CodeDom.Expressions
                 generator.Emit(OpCodes.Pop);
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
-            first.Prepare(ref first, state);
+            first.Build(ref first, state);
             for (int i = 0; i < arguments.Length; i++)
             {
                 var a = arguments[i];
-                a.Prepare(ref a, state);
+                a.Build(ref a, state);
                 arguments[i] = a;
             }
             return false;

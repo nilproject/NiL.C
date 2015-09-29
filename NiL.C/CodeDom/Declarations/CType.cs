@@ -40,6 +40,8 @@ namespace NiL.C.CodeDom.Declarations
         }
 
         public virtual bool IsPointer { get { return TargetType != null; } }
+        public virtual bool IsArray { get; internal set; }
+        public virtual int ArrayLength { get; internal set; }
         public virtual CType TargetType { get; internal set; }
         public virtual bool IsGeneric { get; internal set; }
         public virtual bool IsCallable { get; internal set; }
@@ -89,7 +91,7 @@ namespace NiL.C.CodeDom.Declarations
             throw new NotImplementedException();
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
             return false;
         }

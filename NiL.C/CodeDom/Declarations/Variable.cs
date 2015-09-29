@@ -34,7 +34,7 @@ namespace NiL.C.CodeDom.Declarations
             }
         }
 
-        internal Variable(string type, string name)
+        internal Variable(CType type, string name)
             : base(type, name)
         {
 

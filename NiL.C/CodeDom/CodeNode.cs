@@ -14,13 +14,13 @@ namespace NiL.C.CodeDom
 
     internal abstract class CodeNode
     {
-        internal void Prepare<T>(ref T self, State state) where T : CodeNode
+        internal void Build<T>(ref T self, State state) where T : CodeNode
         {
             var t = self as CodeNode;
-            while (t.Prepare(ref t, state)) ;
+            while (t.Build(ref t, state)) ;
             self = (T)t;
         }
-        protected abstract bool Prepare(ref CodeNode self, State state);
+        protected abstract bool Build(ref CodeNode self, State state);
         internal abstract void Emit(EmitMode mode, System.Reflection.Emit.MethodBuilder method);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using NiL.C.CodeDom.Statements;
@@ -11,59 +12,62 @@ namespace NiL.C.CodeDom.Declarations
 {
     internal class CFunction : Entity
     {
-        private string returnTypeName;
         private MethodBuilder method;
 
         public virtual CType ReturnType { get; protected set; }
         public virtual CodeBlock Body { get; protected set; }
         public virtual Argument[] Parameters { get; protected set; }
 
-        internal CFunction(string returnType, Argument[] parameters, string name)
-            : base(returnType + (parameters.Length > 0 ? "(" + parameters.Aggregate("", (x, y) => x + ", " + y.DefinitionTypeName).Substring(2) + ")" : "(void)"), name)
+        internal CFunction(CType returnType, Argument[] parameters, string name)
+            : base(null, name)
         {
             if (returnType == null)
                 throw new ArgumentNullException();
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException();
-            returnTypeName = returnType;
+            ReturnType = returnType;
             Name = name;
             Parameters = parameters;
-            base.Type = new CType(DefinitionTypeName) { Definition = this };
         }
 
         internal static ParseResult Parse(State state, string code, ref int index)
         {
             string typeName;
             string name;
-            int i = index;
 
-            if (!Parser.ValidateType(code, ref index))
+            int i = index;
+            if (!Parser.ValidateName(code, ref index))
                 return new ParseResult();
             typeName = Parser.CanonizeTypeName(code.Substring(i, index - i));
-            while (char.IsWhiteSpace(code[index]))
-                index++;
-            i = index;
-            if (!Parser.ValidateName(true, code, ref index))
-                return new ParseResult();
-            name = code.Substring(i + (code[i] == '(' ? 1 : 0), index - i - (code[i] == '(' ? 1 : 0));
-            if (string.IsNullOrEmpty(name))
-                throw new SyntaxError("Invalid symbol name at " + CodeCoordinates.FromTextPosition(code, i, 0));
-            while (char.IsWhiteSpace(code[index])) index++;
+            Definition def = state.GetDefinition(typeName, false);
+            // позволяет int по умолчанию
+            if (!(def is CType))
+            {
+                index = i;
+                def = state.GetDefinition("int");
+            }
+
+            while (char.IsWhiteSpace(code[i])) i--;
+            //def = state.GetDeclaration(typeName);
+            var type = Parser.ParseType(state, (CType)def, code, ref index, out name);
+
+            if (Parser.ValidateName(code, ref index))
+            {
+                //var t = 
+            }
 
             using (state.Scope)
             {
-                var prms = parseParameters(state, code, ref index);
-                if (prms == null)
-                    return new ParseResult();
+                var prms = (type.Definition as CFunction).Parameters;
 
                 Definition funcd;
                 CFunction func;
-                if (state.Declarations.TryGetValue(name, out funcd))
+                if (state.Definitions.TryGetValue(name, out funcd))
                 {
                     func = (CFunction)funcd;
                     if (func.Body != null)
                         throw new SyntaxError("Try to redefine \"" + name + "\"");
-                    if (prms.Length != func.Parameters.Length || func.returnTypeName != typeName)
+                    if (prms.Length != func.Parameters.Length || func.ReturnType.Name != typeName)
                         throw new SyntaxError("Invalid signature for \"" + name + "\"");
                     for (var j = 0; j < prms.Length; j++)
                     {
@@ -73,11 +77,11 @@ namespace NiL.C.CodeDom.Declarations
                     func.Parameters = prms;
                 }
                 else
-                    state.Declarations[name] = func = new CFunction(typeName, prms, name);
+                    state.Definitions[name] = func = (CFunction)type.Definition;
 
                 while (char.IsWhiteSpace(code[index])) index++;
                 if (code[index] == ';')
-                    return new ParseResult() { IsParsed = true, Statement = new CFunction(typeName, prms, name) };
+                    return new ParseResult() { IsParsed = true, Statement = func };
                 var body = Statements.CodeBlock.Parse(state, code, ref index);
                 if (!body.IsParsed)
                     throw new SyntaxError("Invalid function body at " + CodeCoordinates.FromTextPosition(code, index, 0));
@@ -85,44 +89,6 @@ namespace NiL.C.CodeDom.Declarations
                 func.Body = (CodeBlock)body.Statement;
                 return new ParseResult() { IsParsed = true, Statement = func };
             }
-        }
-
-        private static Argument[] parseParameters(State state, string code, ref int index)
-        {
-            if (code[index] != '(')
-                return null;
-            do index++; while (char.IsWhiteSpace(code[index]));
-            if (code[index] == ')' || Parser.Validate(code, "void", ref index))
-            {
-                if (code[index] != ')') // тут уже можно кидаться ошибками
-                    throw new SyntaxError("Expected ')' at " + CodeCoordinates.FromTextPosition(code, index, 0));
-                index++;
-                return new Argument[0];
-            }
-            var prms = new List<Argument>();
-            while (code[index] != ')')
-            {
-                if (prms.Count > 0)
-                {
-                    if (code[index] != ',')
-                        throw new SyntaxError("Expected ',' at " + CodeCoordinates.FromTextPosition(code, index, 0));
-                    do index++; while (char.IsWhiteSpace(code[index]));
-                }
-                var i = index;
-                var typeName = "int";
-                if (Parser.ValidateType(code, ref index))
-                    typeName = Parser.CanonizeTypeName(code.Substring(i, index - i));
-                while (char.IsWhiteSpace(code[index])) index++;
-                i = index;
-                if (!Parser.ValidateName(true, code, ref index))
-                    throw new SyntaxError("Invalid name at " + CodeCoordinates.FromTextPosition(code, index, 0));
-                string name = code.Substring(i, index - i);
-                prms.Add(new Argument(typeName, name, prms.Count + 1));
-                state.DeclareSymbol(prms[prms.Count - 1]);
-                while (char.IsWhiteSpace(code[index])) index++;
-            }
-            index++;
-            return prms.ToArray();
         }
 
         internal override void Bind(ModuleBuilder module)
@@ -152,9 +118,19 @@ namespace NiL.C.CodeDom.Declarations
                 throw new InvalidOperationException(method + " already defined");
             if (Body.Lines.Length != 0)
                 Body.Emit(method);
-            if (Body.Lines.Length == 0
-                || !(Body.Lines[Body.Lines.Length - 1] is Return))
+            if (Body.Lines.Length == 0 || !(Body.Lines[Body.Lines.Length - 1] is Return))
+            {
+                if (ReturnType.GetInfo(module) != typeof(void))
+                {
+                    var size = Marshal.SizeOf(ReturnType.GetInfo(module) as Type);
+                    if (size % 4 != 0)
+                        throw new InvalidOperationException();
+                    size /= 4;
+                    while (size-- > 0)
+                        method.GetILGenerator().Emit(OpCodes.Ldc_I4_0);
+                }
                 method.GetILGenerator().Emit(OpCodes.Ret); // return в С не обязателен во всех ветках
+            }
             IsComplete = true;
         }
 
@@ -177,23 +153,39 @@ namespace NiL.C.CodeDom.Declarations
             throw new NotImplementedException();
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
+            if (Type == null)
+            {
+                var typeName = ReturnType.Name + (Parameters.Length > 0 ? "(" + Parameters.Aggregate("", (x, y) => x + ", " + y.Type.Name).Substring(2) + ")" : "(void)");
+                Definition def = null;
+                if (state.Definitions.TryGetValue(typeName, out def))
+                    Type = (CType)def;
+                else
+                    state.Definitions[typeName] = Type = new CType(typeName) { Definition = this };
+            }
             using (state.Scope)
             {
-                ReturnType = (CType)state.GetDeclaration(returnTypeName);
                 for (var i = 0; i < Parameters.Length; i++)
                 {
                     var p = Parameters[i];
-                    p.Prepare(ref p, state);
+                    p.Build(ref p, state);
                     Parameters[i] = p;
                 }
-                var b = Body;
-                Body.Prepare(ref b, state);
-                if (Body != b)
-                    throw new InvalidOperationException("Something wrong");
+                if (Body != null) // эта функция может быть описана typedef'ом
+                {
+                    var b = Body;
+                    Body.Build(ref b, state);
+                    if (Body != b)
+                        throw new InvalidOperationException("Something wrong");
+                }
                 return false;
             }
+        }
+
+        public override string ToString()
+        {
+            return ReturnType.Name + " " + Name + (Parameters.Length > 0 ? "(" + Parameters.Aggregate("", (x, y) => x + ", " + y.Type.Name).Substring(2) + ")" : "(void)");
         }
     }
 }

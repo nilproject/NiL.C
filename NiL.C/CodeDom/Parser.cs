@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NiL.C.CodeDom.Declarations;
+using NiL.C.CodeDom.Expressions;
+using NiL.C.CodeDom.Statements;
 
 namespace NiL.C.CodeDom
 {
@@ -36,29 +38,38 @@ namespace NiL.C.CodeDom
                 if (symbols != null)
                     for (var i = 0; i < symbols.Count; i++)
                     {
-                        owner.Declarations.Remove(symbols[i]);
+                        owner.Definitions.Remove(symbols[i]);
                     }
             }
 
             #endregion
         }
 
-        public readonly Dictionary<string, Definition> Declarations;
+        internal readonly Dictionary<string, Definition> Definitions;
 
         private _Scope scope;
         public IDisposable Scope { get { return scope = new _Scope(this); } }
 
         public State()
         {
-            Declarations = new Dictionary<string, Definition>();
+            Definitions = new Dictionary<string, Definition>();
         }
 
-        public Definition GetDeclaration(string name)
+        public Definition GetDefinition(string name)
+        {
+            return GetDefinition(name, true);
+        }
+
+        public Definition GetDefinition(string name, bool @throw)
         {
             Definition res;
-            if (!Declarations.TryGetValue(name, out res)
+            if (!Definitions.TryGetValue(name, out res)
                 && !EmbeddedEntities.Declarations.TryGetValue(name, out res))
-                throw new ArgumentException("Symbol \"" + name + "\" has not been defined");
+            {
+                if (@throw)
+                    throw new ArgumentException("Symbol \"" + name + "\" has not been defined");
+                return null;
+            }
             return res; // будет брошено исключение если чё
         }
 
@@ -69,7 +80,7 @@ namespace NiL.C.CodeDom
             if (scope.symbols == null)
                 scope.symbols = new List<string>();
             scope.symbols.Add(decl.Name);
-            Declarations.Add(decl.Name, decl);
+            Definitions.Add(decl.Name, decl);
         }
     }
 
@@ -106,12 +117,12 @@ namespace NiL.C.CodeDom
         {
             new _Rule[] // 0
             {
-                new _Rule(ValidateType, Declarations.CFunction.Parse)
+                new _Rule(ValidateName, Declarations.CFunction.Parse)
             },
             new _Rule[] // 1
             {
-                new _Rule(ValidateType, Statements.VariableDefinition.Parse),
-                new _Rule(ValidateName, Expressions.Expression.Parse),
+                new _Rule(ValidateName, VariableDefinition.Parse),
+                new _Rule(ValidateName, Expression.Parse),
                 new _Rule(ValidateOperator, Expressions.Expression.Parse),
                 new _Rule("return", Statements.Return.Parse)
             }
@@ -221,23 +232,7 @@ namespace NiL.C.CodeDom
             }
             return ValidateName(code, ref index) && isIdentificatorTerminator(code[index]);
         }
-
-
-        internal static bool ValidateType(string code, int index)
-        {
-            return ValidateType(code, ref index);
-        }
-
-        internal static bool ValidateType(string code, ref int index)
-        {
-            if (!ValidateTypeName(code, ref index))
-                return false;
-            while (char.IsWhiteSpace(code[index]) || code[index] == '*')
-                index++;
-            //do index--; while (char.IsWhiteSpace(code[index]));
-            return true;
-        }
-
+        
         private static readonly char[] separators = new char[] { ' ', '\u000A', '\u000D', '\u2028', '\u2029' };
         internal static string CanonizeTypeName(string name)
         {
@@ -473,8 +468,7 @@ namespace NiL.C.CodeDom
             if (index >= code.Length || code[index] == '}')
                 return null;
             int sindex = index;
-            if (code[index] == ','
-                || code[index] == ';')
+            if (code[index] == ',' || code[index] == ';')
             {
                 index++;
                 return null;
@@ -497,6 +491,164 @@ namespace NiL.C.CodeDom
             var cord = CodeCoordinates.FromTextPosition(code, sindex, 0);
             throw new SyntaxError("Unexpected token at " + cord + " : "
                 + code.Substring(index, System.Math.Min(20, code.Length - index)).Split(new[] { ' ', '\n', '\r' })[0]);
+        }
+
+        internal static CType ParseType(State state, CType rootType, string code, ref int index, out string entityName)
+        {
+            entityName = null;
+            List<object> modifiers = new List<object>();
+            Stack<object> stack = new Stack<object>();
+            bool work = true;
+            bool rightHand = false;
+            var i = index;
+            int openedBreaks = 0;
+            object aster = '*';
+            while (work)
+            {
+                switch (code[i])
+                {
+                    case '*':
+                        {
+                            if (rightHand)
+                                throw new SyntaxError("");
+                            stack.Push(aster);
+                            break;
+                        }
+                    case '(':
+                        {
+                            if (rightHand)
+                            {
+                                stack.Push(ParseParameters(state, code, ref i));
+                            }
+                            else
+                            {
+                                openedBreaks++;
+                                stack.Push(null); // вот такой маркер открытой скобки
+                            }
+                            break;
+                        }
+                    case '[':
+                        {
+                            if (rightHand)
+                            {
+                                // TODO
+                                throw new NotImplementedException();
+                            }
+                            else
+                                throw new SyntaxError("Unexpected token");
+                        }
+                    case ')':
+                        {
+                            rightHand = true;
+                            if (stack.Count == 0)
+                            {
+                                work = false;
+                                i--;
+                                break;
+                            }
+                            while (stack.Peek() != null)
+                                modifiers.Add(stack.Pop());
+                            stack.Pop();
+                            openedBreaks--;
+                            break;
+                        }
+                    default:
+                        {
+                            if (!char.IsWhiteSpace(code[i]))
+                            {
+                                if (rightHand)
+                                {
+                                    work = false;
+                                    do i--; while (char.IsWhiteSpace(code[i]));
+                                }
+                                else
+                                {
+                                    var s = i;
+                                    if (ValidateName(code, ref i))
+                                    {
+                                        rightHand = true;
+                                        entityName = code.Substring(s, i - s);
+                                        i--;
+                                    }
+                                    else throw new SyntaxError("");
+                                }
+                            }
+                            break;
+                        }
+                }
+                i++;
+            }
+            if (openedBreaks != 0)
+                throw new SyntaxError("Expected ')'");
+            while (stack.Count > 0)
+                modifiers.Add(stack.Pop());
+            for (var m = modifiers.Count; m-- > 0; )
+            {
+                if (modifiers[m] == aster)
+                    rootType = rootType.MakePointerType();
+                else if (modifiers[m] is Argument[])
+                {
+                    var func = new CFunction(rootType, modifiers[m] as Argument[], entityName);
+                    func.Build(ref func, state);
+                    rootType = func.Type;
+                }
+                else
+                    throw new NotImplementedException();
+            }
+            index = i;
+            return rootType;
+        }
+
+        internal static Argument[] ParseParameters(State state, string code, ref int index)
+        {
+            if (code[index] != '(')
+                return null;
+            do index++; while (char.IsWhiteSpace(code[index]));
+            if (code[index] == ')' || Parser.Validate(code, "void", ref index))
+            {
+                if (code[index] != ')') // тут уже можно кидаться ошибками
+                    throw new SyntaxError("Expected ')' at " + CodeCoordinates.FromTextPosition(code, index, 0));
+                index++;
+                return new Argument[0];
+            }
+            var prms = new List<Argument>();
+            bool explicitType = false;
+            while (code[index] != ')')
+            {
+                if (prms.Count > 0)
+                {
+                    if (code[index] != ',')
+                        throw new SyntaxError("Expected ',' at " + CodeCoordinates.FromTextPosition(code, index, 0));
+                    do index++; while (char.IsWhiteSpace(code[index]));
+                }
+                var i = index;
+                string name;
+                CType type;
+                if (Parser.ValidateName(code, ref index))
+                {
+                    name = Parser.CanonizeTypeName(code.Substring(i, index - i));
+                    type = state.GetDefinition(name, false) as CType;
+                    if (type != null)
+                    {
+                        if (prms.Count > 0 && !explicitType)
+                            throw new SyntaxError("All arguments must have a some method of type specification (all implicit or all explicit)");
+                        type = ParseType(state, type, code, ref i, out name);
+                        explicitType = true;
+                    }
+                    else
+                    {
+                        if (prms.Count > 0 && explicitType)
+                            throw new SyntaxError("All arguments must have a some method of type specification (all implicit or all explicit)");
+                        type = state.GetDefinition("int") as CType;
+                    }
+                }
+                else throw new SyntaxError("Invalid name at " + CodeCoordinates.FromTextPosition(code, index, 0));
+                while (char.IsWhiteSpace(code[index])) index++;
+                prms.Add(new Argument(type, name, prms.Count + 1));
+                while (char.IsWhiteSpace(code[index])) index++;
+            }
+            index++;
+            return prms.ToArray();
         }
     }
 }

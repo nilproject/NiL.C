@@ -15,9 +15,23 @@ namespace TestApp
         static void Main(string[] args)
         {
             Compiler.CompileAndSave(@"
-void main(void)
+int mul(a, b)
+int a;
+int b;
 {
-    printf(""%i %i"", 2 + 2 * 2, 2 * 2 + 2)
+    return a + b;
+}
+
+int sum(int a, int b)
+{
+    return a + b;
+}
+
+int main()
+{
+    __wrtln(sum(1,2));
+    __wrtln(mul(3,4));
+    
 }
 ", "TestC", System.Reflection.Emit.PEFileKinds.ConsoleApplication);
             Assembly.LoadFile(Environment.CurrentDirectory + "\\testc.exe").GetModules()[0].GetMethod("main").Invoke(null, null);

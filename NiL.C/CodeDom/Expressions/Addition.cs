@@ -81,10 +81,10 @@ namespace NiL.C.CodeDom.Expressions
             }
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
-            first.Prepare(ref first, state);
-            second.Prepare(ref second, state);
+            first.Build(ref first, state);
+            second.Build(ref second, state);
             return false;
         }
     }

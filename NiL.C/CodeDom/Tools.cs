@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using NiL.C.CodeDom.Declarations;
 
 namespace NiL.C.CodeDom
 {

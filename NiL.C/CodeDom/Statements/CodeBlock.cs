@@ -43,12 +43,12 @@ namespace NiL.C.CodeDom.Statements
                 Lines[i].Emit(EmitMode.SetOrNone, method);
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
             using (state.Scope)
             {
                 for (var i = 0; i < Lines.Length; i++)
-                    Lines[i].Prepare(ref Lines[i], state);
+                    Lines[i].Build(ref Lines[i], state);
                 return false;
             }
         }

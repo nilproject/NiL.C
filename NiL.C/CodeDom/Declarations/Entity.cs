@@ -10,16 +10,19 @@ namespace NiL.C.CodeDom.Declarations
 {
     internal abstract class Entity : Definition
     {
-        public string DefinitionTypeName { get; protected set; }
+        //public string DefinitionTypeName { get; protected set; }
         public virtual CType Type { get; protected set; }
 
-        internal Entity(string typeName, string name)
+        internal Entity(CType type, string name)
         {
-            if (string.IsNullOrEmpty(typeName))
-                throw new ArgumentNullException();
+            //if (string.IsNullOrEmpty(typeName))
+            //    throw new ArgumentNullException();
+            //if (type == null)
+            //    throw new ArgumentNullException();
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException();
-            this.DefinitionTypeName = typeName;
+            Type = type;
+            //this.DefinitionTypeName = typeName;
             Name = name;
         }
 
@@ -28,12 +31,12 @@ namespace NiL.C.CodeDom.Declarations
             return Type.Name + " " + Name;
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
-            if (Type == null)
-                Type = (CType)state.GetDeclaration(DefinitionTypeName);
-            else
-                throw new InvalidOperationException();
+            //if (Type == null)
+            //    Type = (CType)state.GetDeclaration(DefinitionTypeName);
+            //else
+            //    throw new InvalidOperationException();
             return false;
         }
     }

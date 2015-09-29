@@ -44,7 +44,7 @@ namespace NiL.C.CodeDom
             for (var i = 0; i < Content.Count; i++)
             {
                 var t = Content[i] as CodeNode;
-                t.Prepare(ref t, state);
+                t.Build(ref t, state);
                 Content[i] = (Definition)t;
             }
             for (var i = 0; i < Content.Count; i++)

@@ -12,22 +12,22 @@ namespace NiL.C.CodeDom.Expressions
     internal enum OperationTypeGroups : int
     {
         None = 0x0,
-        Postfix = 0x100,
-        Unary1 = 0x200,
-        Unary2 = 0x300,
-        Multiplicative = 0x400,
-        Additive = 0x500,
-        BitwiseShift = 0x600,
-        Relational = 0x700,
-        Equality = 0x800,
-        BitwiseAnd = 0x900,
-        BitwiseXor = 0xa00,
-        BitwiseOr = 0xb00,
-        LogicalAnd = 0xc00,
-        LogicalOr = 0xd00,
+        Postfix = 0x110,
+        Prefix = 0x200,
+        Unary2 = 0x310,
+        Multiplicative = 0x410,
+        Additive = 0x510,
+        BitwiseShift = 0x610,
+        Relational = 0x710,
+        Equality = 0x810,
+        BitwiseAnd = 0x910,
+        BitwiseXor = 0xa10,
+        BitwiseOr = 0xb10,
+        LogicalAnd = 0xc10,
+        LogicalOr = 0xd10,
         Condition = 0xe00,
         Assignment = 0xf00,
-        Comma = 0x1000,
+        Comma = 0x1010,
         Special = 0xff00
     }
 
@@ -38,6 +38,9 @@ namespace NiL.C.CodeDom.Expressions
     {
         None = 0,
 
+        Get = 0x11,
+        Push,
+
         Index = OperationTypeGroups.Postfix + 1,
         Call = OperationTypeGroups.Postfix + 2,
         GetMember = OperationTypeGroups.Postfix + 3,
@@ -45,27 +48,26 @@ namespace NiL.C.CodeDom.Expressions
         PostIncriment = OperationTypeGroups.Postfix + 5,
         PostDecriment = OperationTypeGroups.Postfix + 6,
 
-        PreIncriment = OperationTypeGroups.Unary1 + 1,
-        PreDecriment = OperationTypeGroups.Unary1 + 2,
-        SizeOf = OperationTypeGroups.Unary1 + 3,
-        GetPointer = OperationTypeGroups.Unary1 + 4,
-        Indirection = OperationTypeGroups.Unary1 + 5,
-        Positive = OperationTypeGroups.Unary1 + 6,
-        Negation = OperationTypeGroups.Unary1 + 7,
-        BitwiseNegation = OperationTypeGroups.Unary1 + 8,
-        LogicalNegation = OperationTypeGroups.Unary1 + 9,
-
-        Cast = OperationTypeGroups.Unary2 + 1,
+        PreIncriment = OperationTypeGroups.Prefix + 1,
+        PreDecriment,
+        Casr,
+        SizeOf,
+        GetPointer,
+        Indirection,
+        Positive,
+        Negation,
+        BitwiseNegation,
+        LogicalNegation,
 
         Multiplicate = OperationTypeGroups.Multiplicative + 1,
-        Division = OperationTypeGroups.Multiplicative + 2,
-        Module = OperationTypeGroups.Multiplicative + 3,
+        Division,
+        Module,
 
         Addition = OperationTypeGroups.Additive + 1,
-        Substraction = OperationTypeGroups.Additive + 2,
+        Substraction,
 
         ShiftLeft = OperationTypeGroups.BitwiseShift + 1,
-        ShiftRight = OperationTypeGroups.BitwiseShift + 2,
+        ShiftRight,
 
         Less = OperationTypeGroups.Relational + 1,
         More = OperationTypeGroups.Relational + 2,
@@ -77,7 +79,13 @@ namespace NiL.C.CodeDom.Expressions
 
         BitwiseAnd = OperationTypeGroups.BitwiseAnd + 1,
 
+        BitwiseXor = OperationTypeGroups.BitwiseXor + 1,
+
         BitwiseOr = OperationTypeGroups.BitwiseOr + 1,
+
+        LogicalAnd = OperationTypeGroups.LogicalAnd + 1,
+
+        LogicalOr = OperationTypeGroups.LogicalOr + 1,
 
         Condition = OperationTypeGroups.Condition + 1,
 
@@ -94,6 +102,8 @@ namespace NiL.C.CodeDom.Expressions
         OrAssign = OperationTypeGroups.Assignment + 11,
 
         Comma = OperationTypeGroups.Comma + 1,
+
+        BreackOpen = OperationTypeGroups.Special + 1
     }
 
     internal sealed class Operation
@@ -127,7 +137,7 @@ namespace NiL.C.CodeDom.Expressions
             this.operations = operations;
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
             int arn = 0;
             while (operationsStack.Count != 0)
@@ -185,7 +195,7 @@ namespace NiL.C.CodeDom.Expressions
                         }
                     case OperationType.Get:
                         {
-                            operationsStack.Peek().Parameter = new EntityAccessExpression(operationsStack.Peek().Parameter.ToString());
+                            operationsStack.Peek().Parameter = new EntityAccessExpression(state.GetDefinition(operationsStack.Peek().Parameter.ToString()));
                             arn++;
                             break;
                         }
@@ -202,17 +212,28 @@ namespace NiL.C.CodeDom.Expressions
                             arn = 1;
                             break;
                         }
+                    case OperationType.Multiplicate:
                     case OperationType.Addition:
                         {
+                            var type = operationsStack.Peek().Type;
                             var operation = operationsStack.Pop();
-                            var first = operationsStack.Pop();
                             var second = operationsStack.Pop();
-                            operation.Parameter = new Addition((Expression)first.Parameter, (Expression)second.Parameter);
+                            var first = operationsStack.Pop();
+                            switch (type)
+                            {
+                                case OperationType.Addition:
+                                    operation.Parameter = new Addition((Expression)first.Parameter, (Expression)second.Parameter);
+                                    break;
+                                case OperationType.Multiplicate:
+                                    operation.Parameter = new Multiplicate((Expression)first.Parameter, (Expression)second.Parameter);
+                                    break;
+                            }
                             operationsStack.Push(operation);
                             arn--;
                             break;
                         }
-                    case OperationType.Increment:
+                    case OperationType.PreIncriment:
+                    case OperationType.PostIncriment:
                         {
                             var operation = operationsStack.Pop();
                             operation.Parameter = new Increment((Expression)operationsStack.Pop().Parameter, (Increment.Type)operation.Parameter);
@@ -241,6 +262,11 @@ namespace NiL.C.CodeDom.Expressions
                 throw new InvalidOperationException("Something wrong");
             self = (Expression)operationsStack.Pop().Parameter;
             return true;
+        }
+
+        public override string ToString()
+        {
+            return "<unbuild expression>";
         }
     }
 
@@ -301,8 +327,7 @@ namespace NiL.C.CodeDom.Expressions
                     if (value[value.Length - 1] == '\'' || value[value.Length - 1] == '"')
                     {
                         bool wide = value[0] == 'L';
-                        while (code[index] == value[value.Length - 1]
-                            && Parser.ValidateString(code, ref index))
+                        while (code[index] == value[value.Length - 1] && Parser.ValidateString(code, ref index))
                         {
                             pindex++;
                             value = value.Substring(0, value.Length - 1) + code.Substring(pindex, index - pindex);
@@ -311,6 +336,7 @@ namespace NiL.C.CodeDom.Expressions
                         if (value[value.Length - 1] == '\'' && ((wide && value.Length != 4) || (!wide && value.Length != 3)))
                             throw new SyntaxError("Invalid char constant at " + CodeCoordinates.FromTextPosition(code, pindex, value.Length));
                     }
+                    popIfNeed(operationsStack, operations, OperationType.Push);
                     operationsStack.Push(new Operation(OperationType.Push, value));
 
                     unary = false;
@@ -336,12 +362,14 @@ namespace NiL.C.CodeDom.Expressions
                     {
                         if (refDepth > 0)
                             throw new InvalidOperationException();
-                        operationsStack.Push(new Operation(OperationType.GetOrConvert, name));
+                        popIfNeed(operationsStack, operations, OperationType.Get);
+                        operationsStack.Push(new Operation(OperationType.Get, name));
                     }
                     else
                     {
                         while (refDepth-- > 0)
                             operationsStack.Push(new Operation(OperationType.Indirection, null));
+                        popIfNeed(operationsStack, operations, OperationType.Get);
                         operationsStack.Push(new Operation(OperationType.Get, name));
                         unary = false;
                     }
@@ -362,13 +390,13 @@ namespace NiL.C.CodeDom.Expressions
                             {
                                 throw new NotImplementedException();
                             }
-                            operationsStack.Push(new Operation(OperationType.BrackOpen, null));
+                            operationsStack.Push(new Operation(OperationType.BreackOpen, null));
                             do index++; while (char.IsWhiteSpace(code[index]));
                             break;
                         }
                     case ')':
                         {
-                            while (operationsStack.Peek().Type != OperationType.BrackOpen)
+                            while (operationsStack.Peek().Type != OperationType.BreackOpen)
                                 operations.Add(operationsStack.Pop());
                             operationsStack.Pop();
                             if (operationsStack.Count > 0 && operationsStack.Peek().Type == OperationType.Call)
@@ -387,12 +415,12 @@ namespace NiL.C.CodeDom.Expressions
                                 if (!unary) // operand already in stack
                                 {
                                     var t = operationsStack.Pop();
-                                    operationsStack.Push(new Operation(OperationType.Incriment, Increment.Type.Postincriment));
+                                    operationsStack.Push(new Operation(OperationType.PostIncriment, Increment.Type.Postincriment));
                                     operationsStack.Push(t);
                                 }
                                 else
                                 {
-                                    operationsStack.Push(new Operation(OperationType.Incriment, Increment.Type.Preincriment));
+                                    operationsStack.Push(new Operation(OperationType.PreIncriment, Increment.Type.Preincriment));
                                 }
                                 index++;
                             }
@@ -404,9 +432,8 @@ namespace NiL.C.CodeDom.Expressions
                                 }
                                 else
                                 {
-                                    var t = operationsStack.Pop();
+                                    popIfNeed(operationsStack, operations, OperationType.Addition);
                                     operationsStack.Push(new Operation(OperationType.Addition, null));
-                                    operationsStack.Push(t);
                                 }
                                 unary = true;
                             }
@@ -469,9 +496,18 @@ namespace NiL.C.CodeDom.Expressions
 
         private static void popIfNeed(Stack<Operation> operationsStack, List<Operation> operations, OperationType operation)
         {
-            while (operationsStack.Count > 0
-                && ((int)operationsStack.Peek().Type & (int)OperationTypeGroups.Special) > ((int)operation & (int)OperationTypeGroups.Special))
+            if (operationsStack.Count == 0)
+                return;
+            var stackGroup = (int)operationsStack.Peek().Type & (int)OperationTypeGroups.Special;
+            var currentGroup = (int)operation & (int)OperationTypeGroups.Special;
+            var leftHand = ((int)operation & 0xf0) != 0;
+            while ((stackGroup < currentGroup || (leftHand && stackGroup == currentGroup)))
+            {
                 operations.Add(operationsStack.Pop());
+                if (operationsStack.Count == 0)
+                    return;
+                stackGroup = (int)operationsStack.Peek().Type & (int)OperationTypeGroups.Special;
+            }
         }
 
         internal override void Emit(EmitMode mode, System.Reflection.Emit.MethodBuilder method)
@@ -479,9 +515,11 @@ namespace NiL.C.CodeDom.Expressions
             throw new NotImplementedException();
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
-            throw new NotImplementedException();
+            first.Build(ref first, state);
+            second.Build(ref second, state);
+            return false;
         }
     }
 }

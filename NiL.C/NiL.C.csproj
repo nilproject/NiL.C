@@ -111,7 +111,7 @@
     <Compile Include="CodeDom\Expressions\Mod.cs" />
     <Compile Include="CodeDom\Expressions\More.cs" />
     <Compile Include="CodeDom\Expressions\MoreOrEqual.cs" />
-    <Compile Include="CodeDom\Expressions\Mul.cs" />
+    <Compile Include="CodeDom\Expressions\Multiplicate.cs" />
     <Compile Include="CodeDom\Expressions\Neg.cs" />
     <Compile Include="CodeDom\Expressions\New.cs" />
     <Compile Include="CodeDom\Expressions\None.cs" />

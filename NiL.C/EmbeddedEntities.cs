@@ -42,6 +42,11 @@ namespace NiL.C
                 "lmax",
                 typeof(NCRuntime.ExtMath).GetMethod("lmax")
                 ));
+            Declarations.Add("__wrtln",
+                CLRFunction.CreateFunction(
+                "__wrtln",
+                typeof(NCRuntime.Debug).GetMethod("__wrtln")
+                ));
         }
 
         public static CType GetTypeByCode(CTypeCode code)

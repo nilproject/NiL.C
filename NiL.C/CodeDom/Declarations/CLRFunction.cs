@@ -26,7 +26,7 @@ namespace NiL.C.CodeDom.Declarations
 
         private CLRFunction(CType returnType, string name, MethodInfo methodInfo)
             : base(
-            returnType.Name,
+            returnType,
             methodInfo.GetParameters()
             .Select(x => new Argument(CLRType.Wrap(x.ParameterType), x.Name, x.Position) { IsVarArgArray = x.IsDefined(typeof(ParamArrayAttribute)) })
             .ToArray(),
@@ -74,7 +74,7 @@ namespace NiL.C.CodeDom.Declarations
             return method;
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
             return false;
         }

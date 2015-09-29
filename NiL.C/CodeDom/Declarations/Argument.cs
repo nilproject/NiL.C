@@ -28,16 +28,8 @@ namespace NiL.C.CodeDom.Declarations
         public int Index { get; private set; }
         public bool IsVarArgArray { get; internal set; }
 
-        internal Argument(string typeName, string name, int index)
-            : base(typeName, name)
-        {
-            if (index <= 0)
-                throw new ArgumentOutOfRangeException("Index must be more then 0");
-            Index = index;
-        }
-
         internal Argument(CType type, string name, int index)
-            : base(type.Name, name)
+            : base(type, name)
         {
             Index = index;
             Type = type;
@@ -82,9 +74,9 @@ namespace NiL.C.CodeDom.Declarations
             method.DefineParameter(Index, ParameterAttributes.In, Name);
         }
 
-        protected override bool Prepare(ref CodeNode self, State state)
+        protected override bool Build(ref CodeNode self, State state)
         {
-            base.Prepare(ref self, state);
+            base.Build(ref self, state);
             state.DeclareSymbol(this);
             return false;
         }
