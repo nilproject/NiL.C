@@ -32,7 +32,6 @@ namespace NiL.C.CodeDom.Declarations
             : base(type, name)
         {
             Index = index;
-            Type = type;
         }
 
         internal override void Bind(ModuleBuilder module)

@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 using NiL.C.CodeDom.Declarations;
 using NiL.C.CodeDom.Expressions;
 using NiL.C.CodeDom.Statements;
+using NiL.C.CodeDom;
 
-namespace NiL.C.CodeDom
+namespace NiL.C
 {
     internal enum SymbolType
     {
         Type,
         Field
     }
-
 
     internal sealed class State
     {
@@ -117,14 +117,14 @@ namespace NiL.C.CodeDom
         {
             new _Rule[] // 0
             {
-                new _Rule(ValidateName, Declarations.CFunction.Parse)
+                new _Rule(ValidateName, CFunction.Parse)
             },
             new _Rule[] // 1
             {
                 new _Rule(ValidateName, VariableDefinition.Parse),
                 new _Rule(ValidateName, Expression.Parse),
-                new _Rule(ValidateOperator, Expressions.Expression.Parse),
-                new _Rule("return", Statements.Return.Parse)
+                new _Rule(ValidateOperator, Expression.Parse),
+                new _Rule("return", Return.Parse)
             }
         };
 
@@ -179,6 +179,7 @@ namespace NiL.C.CodeDom
                 || Validate(code, "auto", ref index)
                 || Validate(code, "int", ref index))
                 return isIdentificatorTerminator(code[index]);
+
             if (Validate(code, "signed", ref index))
             {
                 return (Validate(code, " char", ref index)
@@ -191,6 +192,7 @@ namespace NiL.C.CodeDom
                 || Validate(code, " long", ref index)
                 || true) && isIdentificatorTerminator(code[index]);
             }
+
             if (Validate(code, "unsigned", ref index))
             {
                 return (Validate(code, " char", ref index)
@@ -203,6 +205,7 @@ namespace NiL.C.CodeDom
                 || Validate(code, " long", ref index)
                 || true) && isIdentificatorTerminator(code[index]);
             }
+
             if (Validate(code, "long", ref index))
             {
                 return (Validate(code, " int", ref index)
@@ -212,14 +215,17 @@ namespace NiL.C.CodeDom
                 || Validate(code, " double", ref index)
                 || true) && isIdentificatorTerminator(code[index]);
             }
+
             if (Validate(code, "short", ref index))
             {
                 return (Validate(code, " int", ref index)
                 || true) && isIdentificatorTerminator(code[index]);
             }
+
             if (Validate(code, "float", ref index)
                 && (Validate(code, " _Complex", ref index) || true))
                 return isIdentificatorTerminator(code[index]);
+
             if (Validate(code, "double", ref index)
                 && (Validate(code, " _Complex", ref index) || true))
                 return isIdentificatorTerminator(code[index]);
@@ -230,6 +236,7 @@ namespace NiL.C.CodeDom
                 index -= "struct ".Length;
                 return false;
             }
+
             return ValidateName(code, ref index) && isIdentificatorTerminator(code[index]);
         }
         
@@ -596,6 +603,7 @@ namespace NiL.C.CodeDom
                     throw new NotImplementedException();
             }
             index = i;
+
             return rootType;
         }
 
@@ -631,15 +639,17 @@ namespace NiL.C.CodeDom
                     if (type != null)
                     {
                         if (prms.Count > 0 && !explicitType)
-                            throw new SyntaxError("All arguments must have a some method of type specification (all implicit or all explicit)");
-                        type = ParseType(state, type, code, ref i, out name);
+                            throw new SyntaxError("All arguments must have a some kind of type specification (all implicit or all explicit)");
+
+                        type = ParseType(state, type, code, ref index, out name);
                         explicitType = true;
                     }
                     else
                     {
                         if (prms.Count > 0 && explicitType)
-                            throw new SyntaxError("All arguments must have a some method of type specification (all implicit or all explicit)");
-                        type = state.GetDefinition("int") as CType;
+                            throw new SyntaxError("All arguments must have a some kind of type specification (all implicit or all explicit)");
+
+                        type = state.GetDefinition("") as CType;
                     }
                 }
                 else throw new SyntaxError("Invalid name at " + CodeCoordinates.FromTextPosition(code, index, 0));

@@ -55,7 +55,7 @@ namespace NiL.C.CodeDom.Expressions
                 throw new InvalidOperationException();
             var prms = cfunc.Parameters;
             var generator = method.GetILGenerator();
-            for (var i = 0; i < prms.Length; i++)
+            for (var i = prms.Length; i-- > 0;)
             {
                 var targetType = prms[i].Type.GetInfo(method.Module) as Type;
                 if (arguments.Length <= i)
@@ -88,6 +88,7 @@ namespace NiL.C.CodeDom.Expressions
                             if (!EmitHelpers.IsCompatible(argType, etype)
                                 && !EmitHelpers.EmitConvert(method.GetILGenerator(), argType, etype))
                                 throw new ArgumentException("Can not convert " + argType + " to " + etype);
+
                             if (!etype.IsValueType)
                                 generator.Emit(OpCodes.Stelem_Ref);
                             else

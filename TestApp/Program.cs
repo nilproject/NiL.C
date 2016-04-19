@@ -15,26 +15,21 @@ namespace TestApp
         static void Main(string[] args)
         {
             Compiler.CompileAndSave(@"
-int mul(a, b)
+int f(a, b)
 int a;
 int b;
 {
-    return a + b;
-}
-
-int sum(int a, int b)
-{
-    return a + b;
+    return a + b * 2;
 }
 
 int main()
 {
-    __wrtln(sum(1,2));
-    __wrtln(mul(3,4));
+    __wrtln(f(1, 2));
     
 }
 ", "TestC", System.Reflection.Emit.PEFileKinds.ConsoleApplication);
-            Assembly.LoadFile(Environment.CurrentDirectory + "\\testc.exe").GetModules()[0].GetMethod("main").Invoke(null, null);
+            //Assembly.LoadFile(Environment.CurrentDirectory + "\\testc.exe").GetModules()[0].GetMethod("main").Invoke(null, null);
+            Process.Start(new ProcessStartInfo(Environment.CurrentDirectory + "\\testc.exe") { UseShellExecute = false });
         }
 
         struct Struct

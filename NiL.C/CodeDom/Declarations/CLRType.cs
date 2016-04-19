@@ -87,7 +87,8 @@ namespace NiL.C.CodeDom.Declarations
             : base(alias)
         {
             this.proto = proto;
-            wrapCache.Add(proto, this);
+            if (!wrapCache.ContainsKey(proto))
+                wrapCache.Add(proto, this);
         }
 
         internal static CType Wrap(Type type)

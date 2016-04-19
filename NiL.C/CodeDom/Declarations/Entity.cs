@@ -11,7 +11,7 @@ namespace NiL.C.CodeDom.Declarations
     internal abstract class Entity : Definition
     {
         //public string DefinitionTypeName { get; protected set; }
-        public virtual CType Type { get; protected set; }
+        public virtual CType Type { get; internal set; }
 
         internal Entity(CType type, string name)
         {

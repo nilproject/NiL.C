@@ -124,13 +124,13 @@
     <Compile Include="CodeDom\Expressions\Substract.cs" />
     <Compile Include="CodeDom\Expressions\Ternary.cs" />
     <Compile Include="CodeDom\Expressions\Xor.cs" />
-    <Compile Include="CodeDom\Parser.cs" />
+    <Compile Include="Parser.cs" />
     <Compile Include="CodeDom\Statements\CodeBlock.cs" />
     <Compile Include="CodeDom\Statements\Return.cs" />
     <Compile Include="CodeDom\Statements\Statement.cs" />
     <Compile Include="CodeDom\Statements\VariableDeclaration.cs" />
-    <Compile Include="CodeDom\SyntaxError.cs" />
-    <Compile Include="CodeDom\Tools.cs" />
+    <Compile Include="SyntaxError.cs" />
+    <Compile Include="Tools.cs" />
     <Compile Include="Compiler.cs" />
     <Compile Include="EmitHelpers.cs" />
     <Compile Include="EmbeddedEntities.cs" />

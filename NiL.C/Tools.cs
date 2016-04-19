@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Text;
 using NiL.C.CodeDom.Declarations;
 
-namespace NiL.C.CodeDom
+namespace NiL.C
 {
     public sealed class CodeCoordinates
     {

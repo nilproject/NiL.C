@@ -18,6 +18,7 @@ namespace NiL.C
             { "short", new CLRType("short", typeof(short)) },
             { "unsigned short", new CLRType("unsigned short", typeof(ushort)) },
             { "int", new CLRType("int", typeof(int)) },
+            { "", new CLRType("<default>", typeof(int)) },
             { "unsigned int", new CLRType("unsigned int", typeof(uint)) },
             { "long long", new CLRType("long long", typeof(long)) },
             { "unsigned long long", new CLRType("unsigned long long", typeof(ulong)) },

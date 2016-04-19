@@ -47,19 +47,55 @@ namespace NiL.C.CodeDom.Declarations
                 def = state.GetDefinition("int");
             }
 
-            while (char.IsWhiteSpace(code[i])) i--;
-            //def = state.GetDeclaration(typeName);
             var type = Parser.ParseType(state, (CType)def, code, ref index, out name);
+            var prms = (type.Definition as CFunction).Parameters;
 
-            if (Parser.ValidateName(code, ref index))
+            while (code.Length > index && char.IsWhiteSpace(code[index])) index++;
+            i = index;
+            if (Parser.ValidateName(code, index))
             {
-                //var t = 
+                for (var j = 0; j < prms.Length; j++)
+                {
+                    if (prms[j].Type != EmbeddedEntities.Declarations[""])
+                        throw new SyntaxError();
+
+                    prms[j].Type = null;
+                }
+
+                while (Parser.ValidateName(code, ref index))
+                {
+                    string entityName;
+                    var t = Parser.ParseType(state, (CType)state.GetDefinition(code.Substring(i, index - i)), code, ref index, out entityName);
+
+                    for (var j = 0; j < prms.Length; j++)
+                    {
+                        if (prms[j].Name == entityName)
+                        {
+                            if (prms[j].Type != null)
+                                throw new SyntaxError();
+
+                            prms[j].Type = t;
+                            break;
+                        }
+                    }
+
+                    while (code.Length > index && char.IsWhiteSpace(code[index])) index++;
+                    if (code[index] == ';')
+                        index++;
+
+                    while (code.Length > index && char.IsWhiteSpace(code[index])) index++;
+                    i = index;
+                }
+
+                for (var j = 0; j < prms.Length; j++)
+                {
+                    if (prms[j].Type == null)
+                        throw new SyntaxError();
+                }
             }
 
             using (state.Scope)
             {
-                var prms = (type.Definition as CFunction).Parameters;
-
                 Definition funcd;
                 CFunction func;
                 if (state.Definitions.TryGetValue(name, out funcd))
@@ -164,6 +200,7 @@ namespace NiL.C.CodeDom.Declarations
                 else
                     state.Definitions[typeName] = Type = new CType(typeName) { Definition = this };
             }
+
             using (state.Scope)
             {
                 for (var i = 0; i < Parameters.Length; i++)
@@ -172,6 +209,7 @@ namespace NiL.C.CodeDom.Declarations
                     p.Build(ref p, state);
                     Parameters[i] = p;
                 }
+
                 if (Body != null) // эта функция может быть описана typedef'ом
                 {
                     var b = Body;
@@ -179,6 +217,7 @@ namespace NiL.C.CodeDom.Declarations
                     if (Body != b)
                         throw new InvalidOperationException("Something wrong");
                 }
+
                 return false;
             }
         }
