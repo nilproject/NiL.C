@@ -46,9 +46,18 @@ namespace NiL.C
         }
 
         internal readonly Dictionary<string, Definition> Definitions;
+        internal Dictionary<string, string> Macros;
 
         private _Scope scope;
         public IDisposable Scope { get { return scope = new _Scope(this); } }
+
+        internal void DefineMacros(string name, string value)
+        {
+            if (Macros == null)
+                Macros = new Dictionary<string, string>();
+
+            Macros[name] = value;
+        }
 
         public State()
         {
@@ -68,6 +77,7 @@ namespace NiL.C
             {
                 if (@throw)
                     throw new ArgumentException("Symbol \"" + name + "\" has not been defined");
+
                 return null;
             }
             return res; // будет брошено исключение если чё
@@ -106,9 +116,9 @@ namespace NiL.C
                 this.Parse = parseDel;
             }
 
-            public _Rule(ValidateDelegate valDel, ParseDelegate parseDel)
+            public _Rule(ValidateDelegate validateDelegate, ParseDelegate parseDel)
             {
-                this.Validate = valDel;
+                this.Validate = validateDelegate;
                 this.Parse = parseDel;
             }
         }
@@ -117,7 +127,8 @@ namespace NiL.C
         {
             new _Rule[] // 0
             {
-                new _Rule(ValidateName, CFunction.Parse)
+                new _Rule((code, index) => ValidateName(code, index) || Validate(code, "void", index), CFunction.Parse),
+                new _Rule(ValidateName, VariableDefinition.Parse),
             },
             new _Rule[] // 1
             {
@@ -239,7 +250,7 @@ namespace NiL.C
 
             return ValidateName(code, ref index) && isIdentificatorTerminator(code[index]);
         }
-        
+
         private static readonly char[] separators = new char[] { ' ', '\u000A', '\u000D', '\u2028', '\u2029' };
         internal static string CanonizeTypeName(string name)
         {
@@ -261,25 +272,28 @@ namespace NiL.C
 
         internal static bool ValidateName(bool allowBrackets, string code, ref int index)
         {
+            var i = index;
             bool br = false;
-            if (allowBrackets && code[index] == '(')
+            if (allowBrackets && code[i] == '(')
             {
-                do index++; while (char.IsWhiteSpace(code[index]));
+                do i++; while (char.IsWhiteSpace(code[i]));
                 br = true;
             }
-            if (char.IsWhiteSpace(code[index]))
+            if (char.IsWhiteSpace(code[i]))
                 return false;
-            while (code[index] == '*' || char.IsWhiteSpace(code[index]))
-                index++;
-            if (!ValidateName(code, ref index, true))
+            while (code[i] == '*' || char.IsWhiteSpace(code[index]))
+                i++;
+            if (!ValidateName(code, ref i, true))
                 return false;
             if (allowBrackets && br)
             {
-                while (char.IsWhiteSpace(code[index]))
-                    index++;
-                if (code[index] != ')')
+                while (char.IsWhiteSpace(code[i]))
+                    i++;
+                if (code[i] != ')')
                     return false;
             }
+
+            index = i;
             return true;
         }
 
@@ -510,6 +524,7 @@ namespace NiL.C
             var i = index;
             int openedBreaks = 0;
             object aster = '*';
+
             while (work)
             {
                 switch (code[i])
@@ -547,14 +562,16 @@ namespace NiL.C
                     case ')':
                         {
                             rightHand = true;
-                            if (stack.Count == 0)
+                            if (stack.Count == 0 || openedBreaks == 0)
                             {
                                 work = false;
                                 i--;
                                 break;
                             }
+
                             while (stack.Peek() != null)
                                 modifiers.Add(stack.Pop());
+
                             stack.Pop();
                             openedBreaks--;
                             break;
@@ -585,17 +602,20 @@ namespace NiL.C
                 }
                 i++;
             }
+
             if (openedBreaks != 0)
                 throw new SyntaxError("Expected ')'");
+
             while (stack.Count > 0)
                 modifiers.Add(stack.Pop());
-            for (var m = modifiers.Count; m-- > 0; )
+
+            for (var m = modifiers.Count; m-- > 0;)
             {
                 if (modifiers[m] == aster)
                     rootType = rootType.MakePointerType();
-                else if (modifiers[m] is Argument[])
+                else if (modifiers[m] is Parameter[])
                 {
-                    var func = new CFunction(rootType, modifiers[m] as Argument[], entityName);
+                    var func = new CFunction(rootType, modifiers[m] as Parameter[], entityName);
                     func.Build(ref func, state);
                     rootType = func.Type;
                 }
@@ -607,7 +627,7 @@ namespace NiL.C
             return rootType;
         }
 
-        internal static Argument[] ParseParameters(State state, string code, ref int index)
+        internal static Parameter[] ParseParameters(State state, string code, ref int index)
         {
             if (code[index] != '(')
                 return null;
@@ -617,9 +637,9 @@ namespace NiL.C
                 if (code[index] != ')') // тут уже можно кидаться ошибками
                     throw new SyntaxError("Expected ')' at " + CodeCoordinates.FromTextPosition(code, index, 0));
                 index++;
-                return new Argument[0];
+                return new Parameter[0];
             }
-            var prms = new List<Argument>();
+            var prms = new List<Parameter>();
             bool explicitType = false;
             while (code[index] != ')')
             {
@@ -654,7 +674,7 @@ namespace NiL.C
                 }
                 else throw new SyntaxError("Invalid name at " + CodeCoordinates.FromTextPosition(code, index, 0));
                 while (char.IsWhiteSpace(code[index])) index++;
-                prms.Add(new Argument(type, name, prms.Count + 1));
+                prms.Add(new Parameter(type, name, prms.Count + 1));
                 while (char.IsWhiteSpace(code[index])) index++;
             }
             index++;

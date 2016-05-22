@@ -28,7 +28,7 @@ namespace NiL.C.CodeDom.Declarations
             : base(
             returnType,
             methodInfo.GetParameters()
-            .Select(x => new Argument(CLRType.Wrap(x.ParameterType), x.Name, x.Position) { IsVarArgArray = x.IsDefined(typeof(ParamArrayAttribute)) })
+            .Select(x => new Parameter(CLRType.Wrap(x.ParameterType), x.Name, x.Position) { IsVarArgArray = x.IsDefined(typeof(ParamArrayAttribute)) })
             .ToArray(),
             name)
         {

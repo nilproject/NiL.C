@@ -45,21 +45,21 @@ namespace NiL.C.CodeDom.Expressions
             var prm = Declaration as Entity;
             if (prm == null)
                 throw new NotImplementedException();
-            if (mode == EmitMode.Get)
+            
+            prm.Emit(mode, method);
+            /*if (mode == EmitMode.Get)
             {
-                prm.Emit(EmitMode.Get, method);
-                /*if (prm.VariableInfo != null) // переменная метода
+                if (prm.VariableInfo != null) // переменная метода
                     method.GetILGenerator().Emit(OpCodes.Ldloc, prm.VariableInfo.LocalIndex);
                 else if (prm.GetInfo(method.Module) != null) // глобальная переменная
                     method.GetILGenerator().Emit(OpCodes.Ldfld, (FieldInfo)prm.GetInfo(method.Module));
                 else
-                throw new NotImplementedException();*/
+                throw new NotImplementedException();
             }
             else
             {
-                prm.Emit(EmitMode.SetOrNone, method);
                 //method.GetILGenerator().Emit(OpCodes.Stloc, prm.VariableInfo.LocalIndex);
-            }
+            }*/
         }
 
         protected override bool Build(ref CodeNode self, State state)

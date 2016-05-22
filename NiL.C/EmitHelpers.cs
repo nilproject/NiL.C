@@ -14,26 +14,23 @@ namespace NiL.C
         private static readonly MethodInfo WCSTRtoString = new Func<IntPtr, string>(Marshal.PtrToStringUni).Method;
         private static readonly MethodInfo CSTRtoString = new Func<IntPtr, string>(Marshal.PtrToStringAnsi).Method;
 
-        internal static bool EmitConvert(ILGenerator generator, Type source, Type dest)
+        internal static bool Convertable(Type source, Type dest)
         {
             if (IsCompatible(source, dest))
                 return false;
             if (source.IsValueType && dest == typeof(object))
             {
-                generator.Emit(OpCodes.Box, source);
                 return true;
             }
             if (dest == typeof(string))
             {
                 if (source == typeof(char*)) // wchar_t
                 {
-                    generator.Emit(OpCodes.Call, WCSTRtoString);
                     return true;
                 }
 
                 if (source == typeof(byte*)) // char
                 {
-                    generator.Emit(OpCodes.Call, CSTRtoString);
                     return true;
                 }
             }
@@ -41,11 +38,48 @@ namespace NiL.C
             {
                 if (source.IsPointer)
                 {
-                    generator.Emit(OpCodes.Conv_I);
-                    generator.Emit(OpCodes.Box, typeof(IntPtr));
                     return true;
                 }
             }
+            throw new NotImplementedException();
+        }
+
+        internal static void EmitConvert(ILGenerator generator, Type source, Type dest)
+        {
+            if (IsCompatible(source, dest))
+                return;
+
+            if (source.IsValueType && dest == typeof(object))
+            {
+                generator.Emit(OpCodes.Box, source);
+                return;
+            }
+
+            if (dest == typeof(string))
+            {
+                if (source == typeof(char*)) // wchar_t
+                {
+                    generator.Emit(OpCodes.Call, WCSTRtoString);
+                    return;
+                }
+
+                if (source == typeof(byte*)) // char
+                {
+                    generator.Emit(OpCodes.Call, CSTRtoString);
+                    return;
+                }
+            }
+
+            if (dest == typeof(object))
+            {
+                if (source.IsPointer)
+                {
+                    generator.Emit(OpCodes.Conv_I);
+                    generator.Emit(OpCodes.Box, typeof(IntPtr));
+                    return;
+                }
+            }
+
             throw new NotImplementedException();
         }
 

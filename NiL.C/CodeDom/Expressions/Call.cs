@@ -55,7 +55,7 @@ namespace NiL.C.CodeDom.Expressions
                 throw new InvalidOperationException();
             var prms = cfunc.Parameters;
             var generator = method.GetILGenerator();
-            for (var i = prms.Length; i-- > 0;)
+            for (var i = 0; i < prms.Length; i++)
             {
                 var targetType = prms[i].Type.GetInfo(method.Module) as Type;
                 if (arguments.Length <= i)
@@ -72,9 +72,10 @@ namespace NiL.C.CodeDom.Expressions
                 {
                     if (targetType.IsArray && prms[i].IsVarArgArray)
                     {
-                        var etype = targetType.GetElementType();
+                        var targetItemType = targetType.GetElementType();
                         EmitHelpers.EmitPushConstant_I4(generator, arguments.Length - i);
-                        generator.Emit(OpCodes.Newarr, etype);
+                        generator.Emit(OpCodes.Newarr, (Type)targetItemType);
+
                         var index = 0;
                         for (; i < arguments.Length; i++, index++)
                         {
@@ -82,18 +83,24 @@ namespace NiL.C.CodeDom.Expressions
                             EmitHelpers.EmitPushConstant_I4(generator, index);
 
                             if (arguments[i] is IWantToGetType)
-                                (arguments[i] as IWantToGetType).SetType(etype);
-                            arguments[i].Emit(EmitMode.Get, method);
-                            var argType = (Type)arguments[i].ResultType.GetInfo(method.Module);
-                            if (!EmitHelpers.IsCompatible(argType, etype)
-                                && !EmitHelpers.EmitConvert(method.GetILGenerator(), argType, etype))
-                                throw new ArgumentException("Can not convert " + argType + " to " + etype);
+                                (arguments[i] as IWantToGetType).SetType((Type)targetItemType);
 
-                            if (!etype.IsValueType)
+                            var argType = (Type)arguments[i].ResultType.GetInfo(method.Module);
+
+                            if (!EmitHelpers.IsCompatible(argType, (Type)targetItemType) && !EmitHelpers.Convertable(argType, (Type)targetItemType))
+                                throw new ArgumentException((string)("Can not convert " + argType + " to " + targetItemType));
+
+                            arguments[i].Emit(EmitMode.Get, method);
+
+                            EmitHelpers.EmitConvert(generator, argType, (Type)targetItemType);
+
+                            if (!targetItemType.IsValueType && !targetItemType.IsPointer)
+                            {
                                 generator.Emit(OpCodes.Stelem_Ref);
+                            }
                             else
                             {
-                                switch (Type.GetTypeCode(etype))
+                                switch (Type.GetTypeCode((Type)targetItemType))
                                 {
                                     case TypeCode.Byte:
                                     case TypeCode.SByte:
@@ -130,21 +137,26 @@ namespace NiL.C.CodeDom.Expressions
                                             break;
                                         }
                                     default:
-                                        generator.Emit(OpCodes.Stelem, etype);
+                                        generator.Emit(OpCodes.Stelem, (Type)targetItemType);
                                         break;
                                 }
                             }
                         }
+
+                        i -= index;
                     }
                     else
                     {
                         if (arguments[i] is IWantToGetType)
                             (arguments[i] as IWantToGetType).SetType(targetType);
-                        arguments[i].Emit(EmitMode.Get, method);
+
                         var argType = (Type)arguments[i].ResultType.GetInfo(method.Module);
-                        if (!EmitHelpers.IsCompatible(argType, targetType)
-                            && !EmitHelpers.EmitConvert(method.GetILGenerator(), argType, targetType))
+                        if (!EmitHelpers.IsCompatible(argType, targetType) && !EmitHelpers.Convertable(argType, targetType))
                             throw new ArgumentException("Can not convert " + argType + " to " + prms[i].Type.GetInfo(method.Module));
+
+                        arguments[i].Emit(EmitMode.Get, method);
+
+                        EmitHelpers.EmitConvert(generator, argType, targetType);
                     }
                 }
             }

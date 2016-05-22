@@ -12,7 +12,7 @@ namespace NiL.C.CodeDom.Expressions
     internal enum OperationTypeGroups : int
     {
         None = 0x0,
-        Postfix = 0x110,
+        Postfix = 0x100,
         Prefix = 0x200,
         Unary2 = 0x310,
         Multiplicative = 0x410,
@@ -38,19 +38,18 @@ namespace NiL.C.CodeDom.Expressions
     {
         None = 0,
 
-        Get = 0x11,
-        Push,
-
         Index = OperationTypeGroups.Postfix + 1,
-        Call = OperationTypeGroups.Postfix + 2,
-        GetMember = OperationTypeGroups.Postfix + 3,
-        IndirectGetMember = OperationTypeGroups.Postfix + 4,
-        PostIncriment = OperationTypeGroups.Postfix + 5,
-        PostDecriment = OperationTypeGroups.Postfix + 6,
+        Call,
+        GetMember,
+        IndirectGetMember,
+        PostIncriment,
+        PostDecriment,
+        Get,
+        Push,
 
         PreIncriment = OperationTypeGroups.Prefix + 1,
         PreDecriment,
-        Casr,
+        Cast,
         SizeOf,
         GetPointer,
         Indirection,
@@ -103,7 +102,8 @@ namespace NiL.C.CodeDom.Expressions
 
         Comma = OperationTypeGroups.Comma + 1,
 
-        BreackOpen = OperationTypeGroups.Special + 1
+        BreacketOpen = OperationTypeGroups.Special + 1,
+        ArgumentPlaceholder
     }
 
     internal sealed class Operation
@@ -111,10 +111,15 @@ namespace NiL.C.CodeDom.Expressions
         public OperationType Type;
         public object Parameter;
 
-        public Operation(OperationType operationType, object value)
+        public Operation(OperationType type, object value)
         {
-            this.Type = operationType;
+            this.Type = type;
             this.Parameter = value;
+        }
+
+        public Operation(OperationType type)
+        {
+            Type = type;
         }
 
         public override string ToString()
@@ -122,154 +127,7 @@ namespace NiL.C.CodeDom.Expressions
             return Type + " " + Parameter;
         }
     }
-
-#if !PORTABLE
-    [Serializable]
-#endif
-    internal sealed class ParsedExpression : Expression
-    {
-        private Stack<Operation> operationsStack;
-        private List<Operation> operations;
-
-        public ParsedExpression(Stack<Operation> operationsStack, List<Operation> operations)
-        {
-            this.operationsStack = operationsStack;
-            this.operations = operations;
-        }
-
-        protected override bool Build(ref CodeNode self, State state)
-        {
-            int arn = 0;
-            while (operationsStack.Count != 0)
-                operations.Add(operationsStack.Pop());
-            for (var i = 0; i < operations.Count; i++)
-            {
-                operationsStack.Push(operations[i]);
-                switch (operationsStack.Peek().Type)
-                {
-                    case OperationType.Push:
-                        {
-                            var prm = operationsStack.Peek().Parameter;
-                            if (prm is string)
-                            {
-                                var value = prm.ToString();
-                                double number = 0;
-                                int index = 0;
-                                if (Tools.ParseNumber(value, ref index, out number))
-                                {
-                                    if ((int)number == number)
-                                    {
-                                        operationsStack.Peek().Parameter = new Constant((int)number);
-                                    }
-                                    else if ((long)number == number)
-                                    {
-                                        operationsStack.Peek().Parameter = new Constant((long)number);
-                                    }
-                                    else
-                                        operationsStack.Peek().Parameter = new Constant(number);
-                                }
-                                else
-                                {
-                                    if (value[value.Length - 1] == '\'')
-                                    {
-                                        if (value[0] == 'L')
-                                            operationsStack.Peek().Parameter = new Constant((char)value[1]);
-                                        else
-                                            operationsStack.Peek().Parameter = new Constant((byte)value[1]);
-                                    }
-                                    else if (value[value.Length - 1] == '"')
-                                    {
-                                        if (value[0] == 'L')
-                                            operationsStack.Peek().Parameter = new Constant(Tools.Unescape(value.Substring(2, value.Length - 3)));
-                                        else
-                                            operationsStack.Peek().Parameter = new Constant(Encoding.ASCII.GetBytes(Tools.Unescape(value.Substring(1, value.Length - 2))));
-                                    }
-                                    else
-                                        throw new ArgumentException("Can not convert expression: " + value);
-                                }
-                            }
-                            else
-                                throw new ArgumentException("Can not convert expression: " + prm);
-                            arn++;
-                            break;
-                        }
-                    case OperationType.Get:
-                        {
-                            operationsStack.Peek().Parameter = new EntityAccessExpression(state.GetDefinition(operationsStack.Peek().Parameter.ToString()));
-                            arn++;
-                            break;
-                        }
-                    case OperationType.Call:
-                        {
-                            var operation = operationsStack.Pop();
-                            var function = (Expression)operationsStack.Pop().Parameter;
-                            arn--;
-                            var args = new Expression[arn];
-                            for (var j = 0; j < args.Length; j++)
-                                args[j] = (Expression)operationsStack.Pop().Parameter;
-                            operation.Parameter = new Call(function, args);
-                            operationsStack.Push(operation);
-                            arn = 1;
-                            break;
-                        }
-                    case OperationType.Multiplicate:
-                    case OperationType.Addition:
-                        {
-                            var type = operationsStack.Peek().Type;
-                            var operation = operationsStack.Pop();
-                            var second = operationsStack.Pop();
-                            var first = operationsStack.Pop();
-                            switch (type)
-                            {
-                                case OperationType.Addition:
-                                    operation.Parameter = new Addition((Expression)first.Parameter, (Expression)second.Parameter);
-                                    break;
-                                case OperationType.Multiplicate:
-                                    operation.Parameter = new Multiplicate((Expression)first.Parameter, (Expression)second.Parameter);
-                                    break;
-                            }
-                            operationsStack.Push(operation);
-                            arn--;
-                            break;
-                        }
-                    case OperationType.PreIncriment:
-                    case OperationType.PostIncriment:
-                        {
-                            var operation = operationsStack.Pop();
-                            operation.Parameter = new Increment((Expression)operationsStack.Pop().Parameter, (Increment.Type)operation.Parameter);
-                            operationsStack.Push(operation);
-                            break;
-                        }
-                    case OperationType.GetPointer:
-                        {
-                            var operation = operationsStack.Pop();
-                            operation.Parameter = new GetPointer((Expression)operationsStack.Pop().Parameter);
-                            operationsStack.Push(operation);
-                            break;
-                        }
-                    case OperationType.Indirection:
-                        {
-                            var operation = operationsStack.Pop();
-                            operation.Parameter = new Indirection((Expression)operationsStack.Pop().Parameter);
-                            operationsStack.Push(operation);
-                            break;
-                        }
-                    default:
-                        throw new NotImplementedException(operationsStack.Peek().Type.ToString());
-                }
-            }
-            if (arn != 1)
-                throw new InvalidOperationException("Something wrong");
-            self = (Expression)operationsStack.Pop().Parameter;
-            return true;
-        }
-
-        public override string ToString()
-        {
-            return "<unbuild expression>";
-        }
-    }
-
+    
 #if !PORTABLE
     [Serializable]
 #endif
@@ -315,97 +173,70 @@ namespace NiL.C.CodeDom.Expressions
             bool unary = true;
 
             bool work = true;
-            int pindex;
+
             while (work)
             {
-                pindex = index;
-                if (Parser.ValidateValue(code, ref index))
-                {
-                    var value = code.Substring(pindex, index - pindex);
-                    while (char.IsWhiteSpace(code[index])) index++;
-                    pindex = index;
-                    if (value[value.Length - 1] == '\'' || value[value.Length - 1] == '"')
-                    {
-                        bool wide = value[0] == 'L';
-                        while (code[index] == value[value.Length - 1] && Parser.ValidateString(code, ref index))
-                        {
-                            pindex++;
-                            value = value.Substring(0, value.Length - 1) + code.Substring(pindex, index - pindex);
-                            while (char.IsWhiteSpace(code[index])) index++;
-                        }
-                        if (value[value.Length - 1] == '\'' && ((wide && value.Length != 4) || (!wide && value.Length != 3)))
-                            throw new SyntaxError("Invalid char constant at " + CodeCoordinates.FromTextPosition(code, pindex, value.Length));
-                    }
-                    popIfNeed(operationsStack, operations, OperationType.Push);
-                    operationsStack.Push(new Operation(OperationType.Push, value));
+                parseValue(code, ref index, operationsStack, operations, ref unary);
 
-                    unary = false;
-                    while (char.IsWhiteSpace(code[index])) index++;
-                }
-                else if (Parser.ValidateName(true, code, ref index))
-                {
-                    int refDepth = 0;
-                    var br = code[pindex] == '(';
-                    if (br)
-                        do pindex++; while (char.IsWhiteSpace(code[index]));
-                    if (code[pindex] == '*')
-                    {
-                        while (code[pindex] == '*' || char.IsWhiteSpace(code[pindex]))
-                        {
-                            refDepth++;
-                            pindex++;
-                        }
-                    }
-                    var name = code.Substring(pindex, index - pindex - (br ? 1 : 0)).TrimEnd();
-
-                    if (br && refDepth == 0)
-                    {
-                        if (refDepth > 0)
-                            throw new InvalidOperationException();
-                        popIfNeed(operationsStack, operations, OperationType.Get);
-                        operationsStack.Push(new Operation(OperationType.Get, name));
-                    }
-                    else
-                    {
-                        while (refDepth-- > 0)
-                            operationsStack.Push(new Operation(OperationType.Indirection, null));
-                        popIfNeed(operationsStack, operations, OperationType.Get);
-                        operationsStack.Push(new Operation(OperationType.Get, name));
-                        unary = false;
-                    }
-
-                    while (char.IsWhiteSpace(code[index])) index++;
-                }
                 switch (code[index])
                 {
                     case '(':
                         {
-                            if (operationsStack.Peek().Type == OperationType.Get) // вызов
+                            if (operationsStack.Peek().Type == OperationType.Get)
                             {
-                                //if (!unary)
-                                //    throw new InvalidOperationException("something wrong");
                                 operationsStack.Push(new Operation(OperationType.Call, null));
+                                operationsStack.Push(new Operation(OperationType.BreacketOpen, null));
                             }
-                            else // просто скобочки
+                            else if (unary)
                             {
-                                throw new NotImplementedException();
+                                var start = index;
+                                do index++; while (char.IsWhiteSpace(code[index]));
+                                var nstart = index;
+                                CType type = null;
+
+                                if (Parser.ValidateName(code, ref index)
+                                    && (type = state.GetDefinition(code.Substring(nstart, index - nstart), false) as CType) != null)
+                                {
+                                    string fake;
+                                    type = Parser.ParseType(state, type, code, ref index, out fake);
+                                    operationsStack.Push(new Operation(OperationType.Cast, type));
+                                }
+                                else
+                                    operationsStack.Push(new Operation(OperationType.BreacketOpen, null));
                             }
-                            operationsStack.Push(new Operation(OperationType.BreackOpen, null));
-                            do index++; while (char.IsWhiteSpace(code[index]));
+                            else
+                                operationsStack.Push(new Operation(OperationType.BreacketOpen, null));
+
                             break;
                         }
                     case ')':
                         {
-                            while (operationsStack.Peek().Type != OperationType.BreackOpen)
+                            int prmsCount = 0;
+
+                            while (operationsStack.Peek().Type != OperationType.BreacketOpen)
+                            {
                                 operations.Add(operationsStack.Pop());
+                                prmsCount++;
+                            }
+
                             operationsStack.Pop();
                             if (operationsStack.Count > 0 && operationsStack.Peek().Type == OperationType.Call)
                             {
-                                var t = operationsStack.Pop(); // call
+                                var t = operationsStack.Pop();
+                                t.Parameter = prmsCount;
                                 operations.Add(operationsStack.Pop());
                                 operations.Add(t);
+                                operationsStack.Push(new Operation(OperationType.ArgumentPlaceholder));
                             }
-                            do index++; while (char.IsWhiteSpace(code[index]));
+
+                            break;
+                        }
+                    case '=':
+                        {
+                            popIfNeed(operationsStack, operations, OperationType.Assign);
+                            operationsStack.Push(new Operation(OperationType.Assign, null));
+                            unary = true;
+
                             break;
                         }
                     case '+':
@@ -422,6 +253,7 @@ namespace NiL.C.CodeDom.Expressions
                                 {
                                     operationsStack.Push(new Operation(OperationType.PreIncriment, Increment.Type.Preincriment));
                                 }
+
                                 index++;
                             }
                             else
@@ -437,7 +269,7 @@ namespace NiL.C.CodeDom.Expressions
                                 }
                                 unary = true;
                             }
-                            do index++; while (char.IsWhiteSpace(code[index]));
+
                             break;
                         }
                     case '&':
@@ -450,7 +282,7 @@ namespace NiL.C.CodeDom.Expressions
                             {
                                 throw new NotImplementedException();
                             }
-                            do index++; while (char.IsWhiteSpace(code[index]));
+
                             break;
                         }
                     case '*':
@@ -465,16 +297,17 @@ namespace NiL.C.CodeDom.Expressions
                                 operationsStack.Push(new Operation(OperationType.Multiplicate, null));
                                 unary = true;
                             }
-                            do index++; while (char.IsWhiteSpace(code[index]));
+
                             break;
                         }
                     case ',':
                         {
                             if (!processComma)
                                 goto case ';';
-                            popIfNeed(operationsStack, operations, OperationType.Comma);
+                            if (popIfNeed(operationsStack, operations, OperationType.Comma))
+                                operationsStack.Push(new Operation(OperationType.ArgumentPlaceholder));
                             unary = true;
-                            do index++; while (char.IsWhiteSpace(code[index]));
+
                             break;
                         }
                     case ';':
@@ -485,29 +318,110 @@ namespace NiL.C.CodeDom.Expressions
                     default:
                         throw new SyntaxError("Unknown operator " + code[index]);
                 }
+
+                do index++; while (char.IsWhiteSpace(code[index]));
             }
+
+            while (operationsStack.Count != 0)
+            {
+                if (operationsStack.Peek().Type == OperationType.BreacketOpen)
+                    throw new SyntaxError();
+
+                operations.Add(operationsStack.Pop());
+            }
+
+            operations.RemoveAll(x => x.Type == OperationType.ArgumentPlaceholder);
 
             return new ParseResult()
             {
                 IsParsed = true,
-                Statement = new ParsedExpression(operationsStack, operations)
+                Statement = new ParsedExpression(operations)
             };
         }
 
-        private static void popIfNeed(Stack<Operation> operationsStack, List<Operation> operations, OperationType operation)
+        private static void parseValue(string code, ref int index, Stack<Operation> operationsStack, List<Operation> operations, ref bool unary)
+        {
+            var pindex = index;
+            if (Parser.ValidateValue(code, ref index))
+            {
+                var value = code.Substring(pindex, index - pindex);
+                while (char.IsWhiteSpace(code[index])) index++;
+                pindex = index;
+                if (value[value.Length - 1] == '\'' || value[value.Length - 1] == '"')
+                {
+                    bool wide = value[0] == 'L';
+                    while (code[index] == value[value.Length - 1] && Parser.ValidateString(code, ref index))
+                    {
+                        pindex++;
+                        value = value.Substring(0, value.Length - 1) + code.Substring(pindex, index - pindex);
+                        while (char.IsWhiteSpace(code[index])) index++;
+                    }
+                    if (value[value.Length - 1] == '\'' && ((wide && value.Length != 4) || (!wide && value.Length != 3)))
+                        throw new SyntaxError("Invalid char constant at " + CodeCoordinates.FromTextPosition(code, pindex, value.Length));
+                }
+                popIfNeed(operationsStack, operations, OperationType.Push);
+                operationsStack.Push(new Operation(OperationType.Push, value));
+
+                unary = false;
+                while (char.IsWhiteSpace(code[index])) index++;
+            }
+            else if (Parser.ValidateName(true, code, ref index))
+            {
+                int refDepth = 0;
+                var br = code[pindex] == '(';
+                if (br)
+                    do pindex++; while (char.IsWhiteSpace(code[index]));
+                if (code[pindex] == '*')
+                {
+                    while (code[pindex] == '*' || char.IsWhiteSpace(code[pindex]))
+                    {
+                        refDepth++;
+                        pindex++;
+                    }
+                }
+                var name = code.Substring(pindex, index - pindex - (br ? 1 : 0)).TrimEnd();
+
+                if (br && refDepth == 0)
+                {
+                    if (refDepth > 0)
+                        throw new InvalidOperationException();
+                    popIfNeed(operationsStack, operations, OperationType.Get);
+                    operationsStack.Push(new Operation(OperationType.Get, name));
+                }
+                else
+                {
+                    while (refDepth-- > 0)
+                        operationsStack.Push(new Operation(OperationType.Indirection, null));
+                    popIfNeed(operationsStack, operations, OperationType.Get);
+                    operationsStack.Push(new Operation(OperationType.Get, name));
+                    unary = false;
+                }
+
+                while (char.IsWhiteSpace(code[index])) index++;
+            }
+        }
+
+        private static bool popIfNeed(Stack<Operation> operationsStack, List<Operation> operations, OperationType operation)
         {
             if (operationsStack.Count == 0)
-                return;
+                return false;
+
+            var result = false;
+
             var stackGroup = (int)operationsStack.Peek().Type & (int)OperationTypeGroups.Special;
             var currentGroup = (int)operation & (int)OperationTypeGroups.Special;
             var leftHand = ((int)operation & 0xf0) != 0;
             while ((stackGroup < currentGroup || (leftHand && stackGroup == currentGroup)))
             {
+                result = true;
                 operations.Add(operationsStack.Pop());
                 if (operationsStack.Count == 0)
-                    return;
+                    return result;
+
                 stackGroup = (int)operationsStack.Peek().Type & (int)OperationTypeGroups.Special;
             }
+
+            return result;
         }
 
         internal override void Emit(EmitMode mode, System.Reflection.Emit.MethodBuilder method)
@@ -517,8 +431,8 @@ namespace NiL.C.CodeDom.Expressions
 
         protected override bool Build(ref CodeNode self, State state)
         {
-            first.Build(ref first, state);
-            second.Build(ref second, state);
+            first?.Build(ref first, state);
+            second?.Build(ref second, state);
             return false;
         }
     }

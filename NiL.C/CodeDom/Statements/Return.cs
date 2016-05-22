@@ -33,11 +33,14 @@ namespace NiL.C.CodeDom.Statements
                 throw new ArgumentException("Function must return value");
             if (argument != null)
             {
-                argument.Emit(EmitMode.Get, method);
                 if (!EmitHelpers.IsCompatible((Type)argument.ResultType.GetInfo(method.Module), method.ReturnType)
-                    && !EmitHelpers.EmitConvert(method.GetILGenerator(), (Type)argument.ResultType.GetInfo(method.Module), method.ReturnType))
+                    && !EmitHelpers.Convertable((Type)argument.ResultType.GetInfo(method.Module), method.ReturnType))
                     throw new ArgumentException("Invalid return value (" + method + ")");
+
+                argument.Emit(EmitMode.Get, method);
+                EmitHelpers.EmitConvert(method.GetILGenerator(), (Type)argument.ResultType.GetInfo(method.Module), method.ReturnType);
             }
+
             method.GetILGenerator().Emit(System.Reflection.Emit.OpCodes.Ret);
         }
 

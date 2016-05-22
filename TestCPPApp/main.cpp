@@ -4,6 +4,7 @@
 #include "First.h"
 
 #define magic(a) 2
+#define def
 
 int(*(*f())())[1 + 1]
 {
@@ -17,10 +18,13 @@ typedef int *(*type[])();
 
 int main()
 {
+	def(/* эта скобка не обрабатывается препроцессором */1);
 	int(*x); // переменная x типа int*
 	int(*x2)(int); // функция int x2(int)
 	int(*x3(int));
-	
-	char a = -1;
+	goto label;
+	magic(int x(f,b) { ну нифига себе });
+	label:
+	auto a = (void(*)())0;
 	printf("%i   %i", 0xfffffffff);
 }

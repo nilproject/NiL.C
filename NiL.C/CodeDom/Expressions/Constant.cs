@@ -80,9 +80,11 @@ namespace NiL.C.CodeDom.Expressions
                         bvalue,
                         System.Reflection.FieldAttributes.InitOnly);
                 }
+
                 method.GetILGenerator().Emit(OpCodes.Ldsflda, field);
             }
             else
+            {
                 switch (Type.GetTypeCode(Value.GetType()))
                 {
                     case TypeCode.Int32:
@@ -113,6 +115,7 @@ namespace NiL.C.CodeDom.Expressions
                     default:
                         throw new NotImplementedException();
                 }
+            }
         }
 
         protected override bool Build(ref CodeNode self, State state)

@@ -10,7 +10,7 @@ namespace NiL.C
 {
     public static class Compiler
     {
-        public static void CompileAndSave(string code, string name, System.Reflection.Emit.PEFileKinds kind)
+        public static void CompileAndSave(string code, string name, PEFileKinds kind)
         {
             var f = new CodeDom.CSpace();
             f.Process(code);

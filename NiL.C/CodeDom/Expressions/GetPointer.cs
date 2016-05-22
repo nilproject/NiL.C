@@ -23,19 +23,23 @@ namespace NiL.C.CodeDom.Expressions
         {
             if (!(first is EntityAccessExpression))
                 throw new ArgumentException("Can get variables for variables only");
-            var prm = (first as EntityAccessExpression).Declaration as Variable;
-            if (prm != null)
-                prm.Pinned = true;
+
+            var variable = (first as EntityAccessExpression).Declaration as Variable;
+            if (variable != null)
+            {
+                variable.Pinned = true;
+            }
         }
 
-        internal override void Emit(EmitMode mode, System.Reflection.Emit.MethodBuilder method)
+        internal override void Emit(EmitMode mode, MethodBuilder method)
         {
-            if ((first is EntityAccessExpression)
-                && (first as EntityAccessExpression).Declaration is Entity)
+            var variable = (first as EntityAccessExpression).Declaration as Variable;
+            if (variable != null)
             {
-                
+                first.Emit(EmitMode.GetPointer, method);
             }
-            throw new NotImplementedException();
+            else
+                throw new NotImplementedException();
         }
 
         public override string ToString()

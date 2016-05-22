@@ -54,16 +54,31 @@ namespace NiL.C.CodeDom.Declarations
         {
             if (info == null)
                 throw new InvalidOperationException("Variable \"" + Name + "\" has not been defined");
-            switch(mode)
+
+            switch (mode)
             {
                 case EmitMode.Get:
                     {
-                        method.GetILGenerator().Emit(OpCodes.Ldloc, (short)info.LocalIndex);
+                        if (info.LocalIndex < 256)
+                            method.GetILGenerator().Emit(OpCodes.Ldloc_S, (byte)info.LocalIndex);
+                        else
+                            method.GetILGenerator().Emit(OpCodes.Ldloc, (short)info.LocalIndex);
                         break;
                     }
                 case EmitMode.SetOrNone:
                     {
-                        method.GetILGenerator().Emit(OpCodes.Stloc, (short)info.LocalIndex);
+                        if (info.LocalIndex < 256)
+                            method.GetILGenerator().Emit(OpCodes.Stloc_S, (byte)info.LocalIndex);
+                        else
+                            method.GetILGenerator().Emit(OpCodes.Stloc, (short)info.LocalIndex);
+                        break;
+                    }
+                case EmitMode.GetPointer:
+                    {
+                        if (info.LocalIndex < 256)
+                            method.GetILGenerator().Emit(OpCodes.Ldloca_S, (byte)info.LocalIndex);
+                        else
+                            method.GetILGenerator().Emit(OpCodes.Ldloca, (short)info.LocalIndex);
                         break;
                     }
                 default:
@@ -80,7 +95,10 @@ namespace NiL.C.CodeDom.Declarations
         {
             if (info != null)
                 throw new InvalidOperationException("Variable \"" + Name + "\" already defined");
-            info = method.GetILGenerator().DeclareLocal((Type)Type.GetInfo(method.Module), pinned);
+
+            var local = method.GetILGenerator().DeclareLocal((Type)Type.GetInfo(method.Module), pinned);
+            local.SetLocalSymInfo(Name);
+            info = local;
         }
     }
 }

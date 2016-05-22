@@ -16,9 +16,9 @@ namespace NiL.C.CodeDom.Declarations
 
         public virtual CType ReturnType { get; protected set; }
         public virtual CodeBlock Body { get; protected set; }
-        public virtual Argument[] Parameters { get; protected set; }
+        public virtual Parameter[] Parameters { get; protected set; }
 
-        internal CFunction(CType returnType, Argument[] parameters, string name)
+        internal CFunction(CType returnType, Parameter[] parameters, string name)
             : base(null, name)
         {
             if (returnType == null)
@@ -36,8 +36,9 @@ namespace NiL.C.CodeDom.Declarations
             string name;
 
             int i = index;
-            if (!Parser.ValidateName(code, ref index))
+            if (!Parser.ValidateName(code, ref index) && !Parser.Validate(code, "void", ref index))
                 return new ParseResult();
+
             typeName = Parser.CanonizeTypeName(code.Substring(i, index - i));
             Definition def = state.GetDefinition(typeName, false);
             // позволяет int по умолчанию
@@ -48,6 +49,9 @@ namespace NiL.C.CodeDom.Declarations
             }
 
             var type = Parser.ParseType(state, (CType)def, code, ref index, out name);
+            if (type == null || !(type.Definition is CFunction))
+                return new ParseResult();
+
             var prms = (type.Definition as CFunction).Parameters;
 
             while (code.Length > index && char.IsWhiteSpace(code[index])) index++;

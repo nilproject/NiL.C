@@ -9,7 +9,8 @@ namespace NiL.C.CodeDom
     internal enum EmitMode
     {
         Get,
-        SetOrNone
+        SetOrNone,
+        GetPointer
     }
 
     internal abstract class CodeNode

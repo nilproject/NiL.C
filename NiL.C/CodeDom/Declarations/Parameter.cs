@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace NiL.C.CodeDom.Declarations
 {
-    internal sealed class Argument : Entity
+    internal sealed class Parameter : Entity
     {
         private bool pinned = false;
         public bool Pinned
@@ -28,7 +28,7 @@ namespace NiL.C.CodeDom.Declarations
         public int Index { get; private set; }
         public bool IsVarArgArray { get; internal set; }
 
-        internal Argument(CType type, string name, int index)
+        internal Parameter(CType type, string name, int index)
             : base(type, name)
         {
             Index = index;

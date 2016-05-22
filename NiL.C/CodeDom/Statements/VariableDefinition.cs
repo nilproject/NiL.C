@@ -19,9 +19,10 @@ namespace NiL.C.CodeDom.Statements
             if (!Parser.ValidateTypeName(code, ref index))
                 return new ParseResult();
             string typename = Parser.CanonizeTypeName(code.Substring(pindex, index - pindex));
-            var rootType = state.GetDefinition(typename);
+            var rootType = state.GetDefinition(typename, false);
             if (!(rootType is CType))
                 return new ParseResult();
+
             var variables = new List<Entity>();
             List<CodeNode> initializators = null;
             while (code[index] != ';')
