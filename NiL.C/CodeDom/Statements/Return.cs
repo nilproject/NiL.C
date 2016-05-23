@@ -16,15 +16,16 @@ namespace NiL.C.CodeDom.Statements
             argument = arg;
         }
 
-        internal static ParseResult Parse(State state, string code, ref int index)
+        internal static CodeNode Parse(State state, string code, ref int index)
         {
             if (!Parser.Validate(code, "return", ref index))
-                return new ParseResult();
+                return null;
             while (char.IsWhiteSpace(code[index])) index++;
             Expression arg = null;
             if (code[index] != ';')
-                arg = (Expression)Expression.Parse(state, code, ref index).Statement;
-            return new ParseResult() { IsParsed = true, Statement = new Return(arg) };
+                arg = (Expression)Expression.Parse(state, code, ref index);
+
+            return new Return(arg);
         }
 
         internal override void Emit(System.Reflection.Emit.MethodBuilder method)
@@ -48,6 +49,7 @@ namespace NiL.C.CodeDom.Statements
         {
             if (argument != null)
                 argument.Build(ref argument, state);
+
             return false;
         }
     }

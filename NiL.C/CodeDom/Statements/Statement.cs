@@ -16,10 +16,5 @@ namespace NiL.C.CodeDom.Statements
                 throw new ArgumentException();
             Emit(method);
         }
-
-        protected override bool Build(ref CodeNode self, State state)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -127,7 +127,7 @@ namespace NiL.C.CodeDom.Expressions
             return Type + " " + Parameter;
         }
     }
-    
+
 #if !PORTABLE
     [Serializable]
 #endif
@@ -161,12 +161,12 @@ namespace NiL.C.CodeDom.Expressions
             this.second = second;
         }
 
-        internal static ParseResult Parse(State state, string code, ref int index)
+        internal static CodeNode Parse(State state, string code, ref int index)
         {
             return Parse(state, code, ref index, true);
         }
 
-        internal static ParseResult Parse(State state, string code, ref int index, bool processComma)
+        internal static CodeNode Parse(State state, string code, ref int index, bool processComma)
         {
             Stack<Operation> operationsStack = new Stack<Operation>();
             List<Operation> operations = new List<Operation>();
@@ -211,12 +211,31 @@ namespace NiL.C.CodeDom.Expressions
                         }
                     case ')':
                         {
+                            if (operationsStack.Count == 0)
+                                goto case ';';
+
+                            int itemsCount = 0;
                             int prmsCount = 0;
 
-                            while (operationsStack.Peek().Type != OperationType.BreacketOpen)
+                            while (operationsStack.Count > 0
+                                && operationsStack.Peek().Type != OperationType.BreacketOpen)
                             {
                                 operations.Add(operationsStack.Pop());
-                                prmsCount++;
+                                itemsCount++;
+                                if ((prmsCount == 0) 
+                                 || (operations[operations.Count - 1].Type == OperationType.ArgumentPlaceholder))
+                                    prmsCount++;
+                            }
+
+                            if (operationsStack.Count == 0)
+                            {
+                                while (itemsCount-- > 0)
+                                {
+                                    operationsStack.Push(operations[operations.Count - 1]);
+                                    operations.RemoveAt(operations.Count - 1);
+                                }
+
+                                goto case ';';
                             }
 
                             operationsStack.Pop();
@@ -300,6 +319,32 @@ namespace NiL.C.CodeDom.Expressions
 
                             break;
                         }
+                    case '<':
+                        {
+                            if (code[index + 1] == '<')
+                            {
+                                var t = operationsStack.Pop();
+                                operationsStack.Push(new Operation(OperationType.ShiftLeft, null));
+                                operationsStack.Push(t);
+                                index++;
+                            }
+                            else
+                            {
+                                if (unary)
+                                {
+                                    throw new SyntaxError();
+                                }
+                                else
+                                {
+                                    popIfNeed(operationsStack, operations, OperationType.Less);
+                                    operationsStack.Push(new Operation(OperationType.Less, null));
+                                }
+
+                                unary = true;
+                            }
+
+                            break;
+                        }
                     case ',':
                         {
                             if (!processComma)
@@ -332,11 +377,7 @@ namespace NiL.C.CodeDom.Expressions
 
             operations.RemoveAll(x => x.Type == OperationType.ArgumentPlaceholder);
 
-            return new ParseResult()
-            {
-                IsParsed = true,
-                Statement = new ParsedExpression(operations)
-            };
+            return new ParsedExpression(operations);
         }
 
         private static void parseValue(string code, ref int index, Stack<Operation> operationsStack, List<Operation> operations, ref bool unary)

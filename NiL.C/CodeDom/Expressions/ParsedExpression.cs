@@ -95,6 +95,7 @@ namespace NiL.C.CodeDom.Expressions
                             operationsStack.Push(operation);
                             break;
                         }
+                    case OperationType.Less:
                     case OperationType.Multiplicate:
                     case OperationType.Addition:
                         {
@@ -107,8 +108,13 @@ namespace NiL.C.CodeDom.Expressions
                                 case OperationType.Addition:
                                     operation.Parameter = new Addition((Expression)first.Parameter, (Expression)second.Parameter);
                                     break;
+
                                 case OperationType.Multiplicate:
                                     operation.Parameter = new Multiplicate((Expression)first.Parameter, (Expression)second.Parameter);
+                                    break;
+
+                                case OperationType.Less:
+                                    operation.Parameter = new Less((Expression)first.Parameter, (Expression)second.Parameter);
                                     break;
                             }
                             operationsStack.Push(operation);
@@ -118,7 +124,8 @@ namespace NiL.C.CodeDom.Expressions
                     case OperationType.PostIncriment:
                         {
                             var operation = operationsStack.Pop();
-                            operation.Parameter = new Increment((Expression)operationsStack.Pop().Parameter, (Increment.Type)operation.Parameter);
+                            operation.Parameter = new Increment((Expression)operationsStack.Peek().Parameter, (Increment.Type)operation.Parameter);
+                            operationsStack.Pop();
                             operationsStack.Push(operation);
                             break;
                         }

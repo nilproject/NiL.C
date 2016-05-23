@@ -626,7 +626,13 @@ namespace NiL.C
             return (c == '\u000A') || (c == '\u000D') || (c == '\u2028') || (c == '\u2029');
         }
 
-        internal static void skipComment(string code, ref int index, bool skipSpaces)
+        internal static void SkipSpaces(string code, ref int i)
+        {
+            while (i < code.Length && char.IsWhiteSpace(code[i]))
+                i++;
+        }
+
+        internal static void SkipComment(string code, ref int index, bool skipSpaces)
         {
             bool work;
             do
@@ -678,7 +684,7 @@ namespace NiL.C
                         i++;
                 }
                 var s = i;
-                skipComment(code, ref i, false);
+                SkipComment(code, ref i, false);
                 if (s != i && res == null)
                 {
                     res = new StringBuilder(code.Length);

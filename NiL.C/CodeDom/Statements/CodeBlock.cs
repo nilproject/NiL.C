@@ -11,12 +11,13 @@ namespace NiL.C.CodeDom.Statements
     {
         public CodeNode[] Lines { get; private set; }
 
-        internal static ParseResult Parse(State state, string code, ref int index)
+        internal static CodeNode Parse(State state, string code, ref int index)
         {
             if (code[index] != '{')
-                return new ParseResult();
+                return null;
             do index++; while (char.IsWhiteSpace(code[index]));
             var lines = new List<CodeNode>();
+
             using (state.Scope)
             {
                 while (code[index] != '}')
@@ -29,12 +30,9 @@ namespace NiL.C.CodeDom.Statements
                     while (char.IsWhiteSpace(code[index])) index++;
                 }
             }
+
             index++;
-            return new ParseResult()
-            {
-                IsParsed = true,
-                Statement = new CodeBlock() { Lines = lines.ToArray() }
-            };
+            return new CodeBlock() { Lines = lines.ToArray() };
         }
 
         internal override void Emit(MethodBuilder method)

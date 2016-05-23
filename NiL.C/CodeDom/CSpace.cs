@@ -37,10 +37,10 @@ namespace NiL.C.CodeDom
             }
         }
 
-        internal AssemblyBuilder Build(string name, System.Reflection.Emit.AssemblyBuilderAccess mode, System.Reflection.Emit.PEFileKinds kind)
+        internal AssemblyBuilder Build(string name, AssemblyBuilderAccess mode, PEFileKinds kind)
         {
             var assm = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName(name), mode);
-            var module = assm.DefineDynamicModule(name + "_Module", kind == PEFileKinds.Dll ? name + ".dll" : name + ".exe");
+            var module = assm.DefineDynamicModule(name + "_Module", kind == PEFileKinds.Dll ? name + ".dll" : name + ".exe", true);
             for (var i = 0; i < Content.Count; i++)
             {
                 var t = Content[i] as CodeNode;

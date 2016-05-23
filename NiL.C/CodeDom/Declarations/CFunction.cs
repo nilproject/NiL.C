@@ -30,14 +30,14 @@ namespace NiL.C.CodeDom.Declarations
             Parameters = parameters;
         }
 
-        internal static ParseResult Parse(State state, string code, ref int index)
+        internal static CodeNode Parse(State state, string code, ref int index)
         {
             string typeName;
             string name;
 
             int i = index;
             if (!Parser.ValidateName(code, ref index) && !Parser.Validate(code, "void", ref index))
-                return new ParseResult();
+                return null;
 
             typeName = Parser.CanonizeTypeName(code.Substring(i, index - i));
             Definition def = state.GetDefinition(typeName, false);
@@ -50,7 +50,7 @@ namespace NiL.C.CodeDom.Declarations
 
             var type = Parser.ParseType(state, (CType)def, code, ref index, out name);
             if (type == null || !(type.Definition is CFunction))
-                return new ParseResult();
+                return null;
 
             var prms = (type.Definition as CFunction).Parameters;
 
@@ -121,13 +121,13 @@ namespace NiL.C.CodeDom.Declarations
 
                 while (char.IsWhiteSpace(code[index])) index++;
                 if (code[index] == ';')
-                    return new ParseResult() { IsParsed = true, Statement = func };
-                var body = Statements.CodeBlock.Parse(state, code, ref index);
-                if (!body.IsParsed)
+                    return func;
+                var body = CodeBlock.Parse(state, code, ref index);
+                if (body == null)
                     throw new SyntaxError("Invalid function body at " + CodeCoordinates.FromTextPosition(code, index, 0));
 
-                func.Body = (CodeBlock)body.Statement;
-                return new ParseResult() { IsParsed = true, Statement = func };
+                func.Body = (CodeBlock)body;
+                return func;
             }
         }
 

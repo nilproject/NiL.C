@@ -101,6 +101,7 @@
     <Compile Include="CodeDom\Expressions\Equal.cs" />
     <Compile Include="CodeDom\Expressions\Expression.cs" />
     <Compile Include="CodeDom\Expressions\GetMemberExpression.cs" />
+    <Compile Include="CodeDom\Expressions\ILogical.cs" />
     <Compile Include="CodeDom\Expressions\IWantToGetType.cs" />
     <Compile Include="CodeDom\Expressions\NamedEntityExpression.cs" />
     <Compile Include="CodeDom\Expressions\Increment.cs" />

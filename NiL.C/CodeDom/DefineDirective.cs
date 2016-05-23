@@ -9,16 +9,16 @@ namespace NiL.C.CodeDom
 {
     internal sealed class DefineDirective : CodeNode
     {
-        internal static ParseResult Parse(State state, string code, ref int index)
+        internal static CodeNode Parse(State state, string code, ref int index)
         {
             if (!Parser.Validate(code, "#define", ref index))
-                return new ParseResult();
+                return null;
 
             while (char.IsWhiteSpace(code[index]) && code[index] != '\n' && code[index] != '\r') index++;
 
             var start = index;
             if (!Parser.ValidateName(code, ref index))
-                return new ParseResult();
+                return null;
 
             var name = code.Substring(start, index - start);
             var value = "";
@@ -36,7 +36,7 @@ namespace NiL.C.CodeDom
 
             state.DefineMacros(name, value);
 
-            return new ParseResult() { IsParsed = true };
+            return new DefineDirective();
         }
 
         protected override bool Build(ref CodeNode self, State state)

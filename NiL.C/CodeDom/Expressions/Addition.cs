@@ -44,17 +44,20 @@ namespace NiL.C.CodeDom.Expressions
             var secondType = second.ResultType;
             var fTypeCode = firstType.TypeCode;
             var sTypeCode = secondType.TypeCode;
+
             if (firstType.IsPointer && secondType.IsPointer)
                 throw new ArgumentException("Can not process addition for pointers");
             if (!firstType.IsPointer && (fTypeCode <= CTypeCode.Void || fTypeCode >= CTypeCode.Object))
                 throw new ArgumentException("Can not process addition with " + firstType);
             if (!secondType.IsPointer && (sTypeCode <= CTypeCode.Void || sTypeCode >= CTypeCode.Object))
                 throw new ArgumentException("Can not process addition with " + secondType);
+
             first.Emit(EmitMode.Get, method);
             forPointerMul(method, secondType);
             second.Emit(EmitMode.Get, method);
             forPointerMul(method, firstType);
             method.GetILGenerator().Emit(OpCodes.Add);
+
             if (mode == EmitMode.SetOrNone)
                 method.GetILGenerator().Emit(OpCodes.Pop);
         }

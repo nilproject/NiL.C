@@ -94,15 +94,9 @@ namespace NiL.C
         }
     }
 
-    internal struct ParseResult
-    {
-        public bool IsParsed;
-        public CodeNode Statement;
-    }
-
     internal static class Parser
     {
-        internal delegate ParseResult ParseDelegate(State state, string code, ref int index);
+        internal delegate CodeNode ParseDelegate(State state, string code, ref int index);
         internal delegate bool ValidateDelegate(string code, int index);
 
         private class _Rule
@@ -132,10 +126,11 @@ namespace NiL.C
             },
             new _Rule[] // 1
             {
+                new _Rule("return", Return.Parse),
+                new _Rule("for", For.Parse),
                 new _Rule(ValidateName, VariableDefinition.Parse),
                 new _Rule(ValidateName, Expression.Parse),
-                new _Rule(ValidateOperator, Expression.Parse),
-                new _Rule("return", Return.Parse)
+                new _Rule(ValidateOperator, Expression.Parse)
             }
         };
 
@@ -502,10 +497,10 @@ namespace NiL.C
                 {
                     var newIndex = index;
                     var pr = rules[ruleset][i].Parse(state, code, ref newIndex);
-                    if (pr.IsParsed)
+                    if (pr != null)
                     {
                         index = newIndex;
-                        return pr.Statement;
+                        return pr;
                     }
                 }
             }

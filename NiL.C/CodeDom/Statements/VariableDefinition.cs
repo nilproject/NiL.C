@@ -13,15 +13,15 @@ namespace NiL.C.CodeDom.Statements
         public Entity[] Variables { get; private set; }
         public CodeNode[] Initializators { get; private set; }
 
-        internal static ParseResult Parse(State state, string code, ref int index)
+        internal static CodeNode Parse(State state, string code, ref int index)
         {
             int pindex = index;
             if (!Parser.ValidateTypeName(code, ref index))
-                return new ParseResult();
+                return null;
             string typename = Parser.CanonizeTypeName(code.Substring(pindex, index - pindex));
             var rootType = state.GetDefinition(typename, false);
             if (!(rootType is CType))
-                return new ParseResult();
+                return null;
 
             var variables = new List<Entity>();
             List<CodeNode> initializators = null;
@@ -44,16 +44,17 @@ namespace NiL.C.CodeDom.Statements
                 if (code[index] == '=')
                 {
                     do index++; while (char.IsWhiteSpace(code[index]));
-                    var initializator = Expression.Parse(state, code, ref index, false);
-                    if (!initializator.IsParsed)
+                    var initializer = Expression.Parse(state, code, ref index, false);
+                    if (initializer == null)
                         throw new SyntaxError("Unexpected expression at " + CodeCoordinates.FromTextPosition(code, index, 0));
+
                     if (initializators == null)
                     {
                         initializators = new List<CodeNode>(variables.Count + 1);
                         while (initializators.Count < variables.Count)
                             initializators.Add(null);
                     }
-                    initializators.Add((Expression)initializator.Statement);
+                    initializators.Add(initializer);
                     while (char.IsWhiteSpace(code[index]))
                         index++;
                 }
@@ -65,14 +66,10 @@ namespace NiL.C.CodeDom.Statements
                 if (code[index] != ',' && code[index] != ';')
                     throw new SyntaxError("Unexpected token at " + CodeCoordinates.FromTextPosition(code, index, 0));
             }
-            return new ParseResult
+            return new VariableDefinition
             {
-                IsParsed = true,
-                Statement = new VariableDefinition
-                {
-                    Variables = variables.ToArray(),
-                    Initializators = initializators != null ? initializators.ToArray() : null
-                }
+                Variables = variables.ToArray(),
+                Initializators = initializators != null ? initializators.ToArray() : null
             };
         }
 
