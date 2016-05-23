@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
-
-
+using NiL.C.CodeDom.Declarations;
 
 namespace NiL.C.CodeDom.Expressions
 {
@@ -15,6 +14,14 @@ namespace NiL.C.CodeDom.Expressions
         {
             Preincriment,
             Postincriment
+        }
+
+        public override CType ResultType
+        {
+            get
+            {
+                return first.ResultType;
+            }
         }
 
         public override bool IsContextIndependent

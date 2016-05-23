@@ -128,6 +128,7 @@ namespace NiL.C
             {
                 new _Rule("return", Return.Parse),
                 new _Rule("for", For.Parse),
+                new _Rule("while", While.Parse),
                 new _Rule(ValidateName, VariableDefinition.Parse),
                 new _Rule(ValidateName, Expression.Parse),
                 new _Rule(ValidateOperator, Expression.Parse)

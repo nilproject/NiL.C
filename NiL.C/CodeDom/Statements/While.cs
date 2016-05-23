@@ -8,46 +8,25 @@ using System.Threading.Tasks;
 
 namespace NiL.C.CodeDom.Statements
 {
-    internal sealed class For : Statement
+    internal sealed class While : Statement
     {
-        private CodeNode _initializer;
         private CodeNode _condition;
-        private CodeNode _post;
         private CodeNode _body;
 
-        private For()
+        private While()
         {
 
         }
 
         internal static CodeNode Parse(State state, string code, ref int index)
         {
-            if (!Parser.Validate(code, "for (", ref index)
-                && !Parser.Validate(code, "for(", ref index))
+            if (!Parser.Validate(code, "while (", ref index)
+                && !Parser.Validate(code, "while(", ref index))
                 return null;
 
             Tools.SkipSpaces(code, ref index);
 
-            var initializer = VariableDefinition.Parse(state, code, ref index)
-                           ?? Expressions.Expression.Parse(state, code, ref index);
-            
-            Tools.SkipSpaces(code, ref index);
-
-            if (!Parser.Validate(code, ";", ref index))
-                throw new SyntaxError();
-
-            Tools.SkipSpaces(code, ref index);
-
             var condition = Expressions.Expression.Parse(state, code, ref index);
-
-            Tools.SkipSpaces(code, ref index);
-
-            if (!Parser.Validate(code, ";", ref index))
-                throw new SyntaxError();
-
-            Tools.SkipSpaces(code, ref index);
-
-            var post = Expressions.Expression.Parse(state, code, ref index);
 
             Tools.SkipSpaces(code, ref index);
 
@@ -56,11 +35,9 @@ namespace NiL.C.CodeDom.Statements
 
             var body = Parser.Parse(state, code, ref index, 1);
 
-            var result = new For
+            var result = new While
             {
-                _initializer = initializer,
                 _condition = condition,
-                _post = post,
                 _body = body
             };
 
@@ -72,8 +49,6 @@ namespace NiL.C.CodeDom.Statements
             var generator = method.GetILGenerator();
             var exitLable = generator.DefineLabel();
             var loopLabel = generator.DefineLabel();
-
-            _initializer?.Emit(EmitMode.SetOrNone, method);
 
             generator.MarkLabel(loopLabel);
 
@@ -91,17 +66,13 @@ namespace NiL.C.CodeDom.Statements
 
             _body?.Emit(EmitMode.SetOrNone, method);
 
-            _post?.Emit(EmitMode.SetOrNone, method);
-
             generator.Emit(OpCodes.Br, loopLabel);
             generator.MarkLabel(exitLable);
         }
 
         protected override bool Build(ref CodeNode self, State state)
         {
-            _initializer?.Build(ref _initializer, state);
             _condition?.Build(ref _condition, state);
-            _post?.Build(ref _post, state);
             _body?.Build(ref _body, state);
 
             return false;
@@ -109,7 +80,7 @@ namespace NiL.C.CodeDom.Statements
 
         public override string ToString()
         {
-            return "for (" + _initializer + "; " + _condition + "; " + _post + ")" + Environment.NewLine +
+            return "while (" + _condition + ")" + Environment.NewLine +
                         _body;
         }
     }
