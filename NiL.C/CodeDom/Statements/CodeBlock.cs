@@ -27,6 +27,7 @@ namespace NiL.C.CodeDom.Statements
                     {
                         lines.Add(line);
                     }
+
                     while (char.IsWhiteSpace(code[index])) index++;
                 }
             }

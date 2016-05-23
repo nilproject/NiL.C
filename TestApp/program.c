@@ -6,7 +6,14 @@
 void main()
 {
 	int i = 0;
-	do
+
+	if (true)
 		printf("%i\n", i++ + 2);
-	while (i < 10);
+
+	if (false)
+	{
+
+	}
+	else
+		printf("%i\n", i++ + 2);
 }

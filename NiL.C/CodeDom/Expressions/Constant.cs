@@ -87,6 +87,14 @@ namespace NiL.C.CodeDom.Expressions
             {
                 switch (Type.GetTypeCode(Value.GetType()))
                 {
+                    case TypeCode.Boolean:
+                        {
+                            if ((bool)Value)
+                                method.GetILGenerator().Emit(OpCodes.Ldc_I4_1);
+                            else
+                                method.GetILGenerator().Emit(OpCodes.Ldc_I4_0);
+                            break;
+                        }
                     case TypeCode.Int32:
                         {
                             EmitHelpers.EmitPushConstant_I4(method.GetILGenerator(), (int)Value);

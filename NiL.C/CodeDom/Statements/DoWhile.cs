@@ -81,8 +81,7 @@ namespace NiL.C.CodeDom.Statements
 
         public override string ToString()
         {
-            return "while (" + _condition + ")" + Environment.NewLine +
-                        _body;
+            return "do" + Environment.NewLine + _body + Environment.NewLine + "while (" + _condition + ")";
         }
     }
 }

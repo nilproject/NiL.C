@@ -22,7 +22,7 @@ namespace NiL.C
 
         public override string ToString()
         {
-            return "(" + Line + ": " + Column + "*" + Length + ")";
+            return "(" + Line + ":" + Column + (Length != 0 ? "*" + Length: "") + ")";
         }
 
         public static CodeCoordinates FromTextPosition(string text, int position, int length)
@@ -72,15 +72,15 @@ namespace NiL.C
 
         internal static readonly char[] TrimChars = new[] { '\u0009', '\u000A', '\u000B', '\u000C', '\u000D', '\u0020', '\u00A0', '\u1680', '\u180E', '\u2000', '\u2001', '\u2002', '\u2003', '\u2004', '\u2005', '\u2006', '\u2007', '\u2008', '\u2009', '\u200A', '\u2028', '\u2029', '\u202F', '\u205F', '\u3000', '\uFEFF' };
 
-        internal static readonly char[] NumChars = new[] 
-        { 
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' 
+        internal static readonly char[] NumChars = new[]
+        {
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
         };
-        internal static readonly string[] NumString = new[] 
-		{ 
+        internal static readonly string[] NumString = new[]
+        {
             "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"
-		};
+        };
 
         //internal static readonly string[] charStrings = (from x in Enumerable.Range(char.MinValue, char.MaxValue) select ((char)x).ToString()).ToArray();
 
@@ -187,7 +187,7 @@ namespace NiL.C
                 return "-Infinity";
             if (double.IsNaN(d))
                 return "NaN";
-            for (var i = 8; i-- > 0; )
+            for (var i = 8; i-- > 0;)
             {
                 if (cachedDoubleString[i].key == d)
                     return cachedDoubleString[i].value;
@@ -229,7 +229,7 @@ namespace NiL.C
 
         public static string Int32ToString(int value)
         {
-            for (var i = 8; i-- > 0; )
+            for (var i = 8; i-- > 0;)
             {
                 if (intStringCache[i].key == value)
                     return intStringCache[i].value;
@@ -674,7 +674,7 @@ namespace NiL.C
         internal static string RemoveComments(string code, int startPosition)
         {
             StringBuilder res = null;// new StringBuilder(code.Length);
-            for (int i = startPosition; i < code.Length; )
+            for (int i = startPosition; i < code.Length;)
             {
                 while (i < code.Length && char.IsWhiteSpace(code[i]))
                 {

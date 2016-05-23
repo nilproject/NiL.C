@@ -126,10 +126,12 @@ namespace NiL.C
             },
             new _Rule[] // 1
             {
+                new _Rule("{", CodeBlock.Parse),
                 new _Rule("return", Return.Parse),
                 new _Rule("for", For.Parse),
                 new _Rule("while", While.Parse),
                 new _Rule("do", DoWhile.Parse),
+                new _Rule("if", IfElse.Parse),
                 new _Rule(ValidateName, VariableDefinition.Parse),
                 new _Rule(ValidateName, Expression.Parse),
                 new _Rule(ValidateOperator, Expression.Parse)
@@ -502,7 +504,11 @@ namespace NiL.C
                     if (pr != null)
                     {
                         if ((code.Length <= newIndex || code[newIndex] != ';') && code[newIndex - 1] != '}')
-                            throw new SyntaxError("Expected ';'");
+                        {
+                            newIndex--;
+                            if ((code.Length <= newIndex || code[newIndex] != ';') && code[newIndex - 1] != '}')
+                                throw new SyntaxError("Expected ';'");
+                        }
 
                         index = newIndex + 1;
                         return pr;
@@ -510,9 +516,9 @@ namespace NiL.C
                 }
             }
 
-            var cord = CodeCoordinates.FromTextPosition(code, sindex, 0);
-            throw new SyntaxError("Unexpected token at " + cord + " : "
-                + code.Substring(index, System.Math.Min(20, code.Length - index)).Split(new[] { ' ', '\n', '\r' })[0]);
+            var @operator = code.Substring(index, Math.Min(20, code.Length - index)).Split(new[] { ' ', '\n', '\r' })[0];
+            var cord = CodeCoordinates.FromTextPosition(code, index, @operator.Length);
+            throw new SyntaxError("Unexpected token at " + cord + " : " + @operator);
         }
 
         internal static CType ParseType(State state, CType rootType, string code, ref int index, out string entityName)

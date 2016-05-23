@@ -34,43 +34,60 @@ namespace NiL.C.CodeDom.Expressions
                             if (prm is string)
                             {
                                 var value = prm.ToString();
-                                double number = 0;
-                                int index = 0;
-                                if (Tools.ParseNumber(value, ref index, out number))
+
+                                switch (value)
                                 {
-                                    if ((int)number == number)
-                                    {
-                                        operationsStack.Peek().Parameter = new Constant((int)number);
-                                    }
-                                    else if ((long)number == number)
-                                    {
-                                        operationsStack.Peek().Parameter = new Constant((long)number);
-                                    }
-                                    else
-                                        operationsStack.Peek().Parameter = new Constant(number);
-                                }
-                                else
-                                {
-                                    if (value[value.Length - 1] == '\'')
-                                    {
-                                        if (value[0] == 'L')
-                                            operationsStack.Peek().Parameter = new Constant((char)value[1]);
-                                        else
-                                            operationsStack.Peek().Parameter = new Constant((byte)value[1]);
-                                    }
-                                    else if (value[value.Length - 1] == '"')
-                                    {
-                                        if (value[0] == 'L')
-                                            operationsStack.Peek().Parameter = new Constant(Tools.Unescape(value.Substring(2, value.Length - 3)));
-                                        else
-                                            operationsStack.Peek().Parameter = new Constant(Encoding.ASCII.GetBytes(Tools.Unescape(value.Substring(1, value.Length - 2))));
-                                    }
-                                    else
-                                        throw new ArgumentException("Can not convert expression: " + value);
+                                    case "true":
+                                        {
+                                            prm = new Constant(true);
+                                            break;
+                                        }
+                                    case "false":
+                                        {
+                                            prm = new Constant(false);
+                                            break;
+                                        }
+                                    default:
+                                        {
+                                            double number = 0;
+                                            int index = 0;
+                                            if (Tools.ParseNumber(value, ref index, out number))
+                                            {
+                                                if ((int)number == number)
+                                                    prm = new Constant((int)number);
+                                                else if ((long)number == number)
+                                                    prm = new Constant((long)number);
+                                                else
+                                                    prm = new Constant(number);
+                                            }
+                                            else
+                                            {
+                                                if (value[value.Length - 1] == '\'')
+                                                {
+                                                    if (value[0] == 'L')
+                                                        prm = new Constant((char)value[1]);
+                                                    else
+                                                        prm = new Constant((byte)value[1]);
+                                                }
+                                                else if (value[value.Length - 1] == '"')
+                                                {
+                                                    if (value[0] == 'L')
+                                                        prm = new Constant(Tools.Unescape(value.Substring(2, value.Length - 3)));
+                                                    else
+                                                        prm = new Constant(Encoding.ASCII.GetBytes(Tools.Unescape(value.Substring(1, value.Length - 2))));
+                                                }
+                                                else
+                                                    throw new ArgumentException("Unknown identifier: " + value);
+                                            }
+                                            break;
+                                        }
                                 }
                             }
                             else
-                                throw new ArgumentException("Can not convert expression: " + prm);
+                                throw new ArgumentException("Can not process expression: " + prm);
+
+                            operationsStack.Peek().Parameter = prm;
+
                             break;
                         }
                     case OperationType.Get:
@@ -89,7 +106,10 @@ namespace NiL.C.CodeDom.Expressions
 
                             var args = new Expression[(int)operation.Parameter];
                             for (var j = args.Length; j-- > 0;)
-                                args[j] = (Expression)operationsStack.Pop().Parameter;
+                            {
+                                var prm = operationsStack.Pop().Parameter;
+                                args[j] = (Expression)prm;
+                            }
 
                             operation.Parameter = new Call(function, args);
                             operationsStack.Push(operation);

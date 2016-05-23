@@ -355,13 +355,13 @@ namespace NiL.C.CodeDom.Expressions
 
                             break;
                         }
+                    case '}':
                     case ';':
+                    default:
                         {
                             work = false;
                             continue;
                         }
-                    default:
-                        throw new SyntaxError("Unknown operator " + code[index]);
                 }
 
                 do index++; while (char.IsWhiteSpace(code[index]));
