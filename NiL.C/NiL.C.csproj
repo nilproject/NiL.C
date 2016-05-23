@@ -127,6 +127,7 @@
     <Compile Include="CodeDom\Expressions\Substract.cs" />
     <Compile Include="CodeDom\Expressions\Ternary.cs" />
     <Compile Include="CodeDom\Expressions\Xor.cs" />
+    <Compile Include="CodeDom\Statements\DoWhile.cs" />
     <Compile Include="CodeDom\Statements\While.cs" />
     <Compile Include="CodeDom\Statements\For.cs" />
     <Compile Include="Parser.cs" />
