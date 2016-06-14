@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -34,10 +35,10 @@ namespace NiL.C.CodeDom.Declarations
                     return CTypeCode.Void;
                 switch (Type.GetTypeCode(proto))
                 {
-                    case System.TypeCode.Byte: // UChar
-                        return CTypeCode.UChar;
-                    case System.TypeCode.SByte:
+                    case System.TypeCode.Byte:
                         return CTypeCode.Char;
+                    case System.TypeCode.SByte:
+                        return CTypeCode.SChar;
                     case System.TypeCode.UInt16:
                         return CTypeCode.UShort;
                     case System.TypeCode.Int16:
@@ -55,6 +56,8 @@ namespace NiL.C.CodeDom.Declarations
                     case System.TypeCode.Double:
                         return CTypeCode.Double;
                     default:
+                        if (proto.IsPointer)
+                            return CTypeCode.Pointer;
                         return CTypeCode.Object;
                 }
             }
@@ -73,13 +76,22 @@ namespace NiL.C.CodeDom.Declarations
             get
             {
                 CType res = null;
-                if (wrapCache.TryGetValue(proto.GetElementType(), out res))
+                if (proto.HasElementType && wrapCache.TryGetValue(proto.GetElementType(), out res))
                     return res;
-                return MakePointerType();
+
+                return null;
             }
             internal set
             {
 
+            }
+        }
+
+        public override int Size
+        {
+            get
+            {
+                return Marshal.SizeOf(proto);
             }
         }
 

@@ -121,7 +121,7 @@ namespace NiL.C
         {
             new _Rule[] // 0
             {
-                new _Rule((code, index) => ValidateName(code, index) || Validate(code, "void", index), CFunction.Parse),
+                new _Rule((code, index) => ValidateName(code, index) || Validate(code, "void", index), Function.Parse),
                 new _Rule(ValidateName, VariableDefinition.Parse),
             },
             new _Rule[] // 1
@@ -622,7 +622,7 @@ namespace NiL.C
                     rootType = rootType.MakePointerType();
                 else if (modifiers[m] is Parameter[])
                 {
-                    var func = new CFunction(rootType, modifiers[m] as Parameter[], entityName);
+                    var func = new Function(rootType, modifiers[m] as Parameter[], entityName);
                     func.Build(ref func, state);
                     rootType = func.Type;
                 }

@@ -27,6 +27,13 @@ namespace NiL.C.CodeDom.Declarations
 
         public int Index { get; private set; }
         public bool IsVarArgArray { get; internal set; }
+        public override int Size
+        {
+            get
+            {
+                return Type.Size;
+            }
+        }
 
         internal Parameter(CType type, string name, int index)
             : base(type, name)

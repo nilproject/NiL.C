@@ -103,6 +103,7 @@ namespace NiL.C.CodeDom.Expressions
         Comma = OperationTypeGroups.Comma + 1,
 
         BreacketOpen = OperationTypeGroups.Special + 1,
+        SquareBreacketOpen,
         ArgumentPlaceholder
     }
 
@@ -170,22 +171,28 @@ namespace NiL.C.CodeDom.Expressions
         {
             Stack<Operation> operationsStack = new Stack<Operation>();
             List<Operation> operations = new List<Operation>();
-            bool unary = true;
-
-            bool work = true;
-
+            var brksOpnd = 0;
+            var unary = true;
+            var work = true;
             while (work)
             {
+                if (Parser.Validate(code, "sizeof", ref index))
+                {
+                    operationsStack.Push(new Operation(OperationType.SizeOf, null));
+                    while (char.IsWhiteSpace(code[index])) index++;
+                }
+
                 parseValue(code, ref index, operationsStack, operations, ref unary);
 
                 switch (code[index])
                 {
                     case '(':
                         {
-                            if (operationsStack.Peek().Type == OperationType.Get)
+                            if (operationsStack.Count > 0 && operationsStack.Peek().Type == OperationType.Get)
                             {
                                 operationsStack.Push(new Operation(OperationType.Call, null));
                                 operationsStack.Push(new Operation(OperationType.BreacketOpen, null));
+                                brksOpnd++;
                             }
                             else if (unary)
                             {
@@ -199,13 +206,23 @@ namespace NiL.C.CodeDom.Expressions
                                 {
                                     string fake;
                                     type = Parser.ParseType(state, type, code, ref index, out fake);
+
+                                    var isSizeOf = operationsStack.Count > 0 && operationsStack.Peek().Type == OperationType.SizeOf;
                                     operationsStack.Push(new Operation(OperationType.Cast, type));
+                                    if (isSizeOf)
+                                        operationsStack.Push(new Operation(OperationType.Push, 0));
                                 }
                                 else
+                                {
                                     operationsStack.Push(new Operation(OperationType.BreacketOpen, null));
+                                    brksOpnd++;
+                                }
                             }
                             else
+                            {
                                 operationsStack.Push(new Operation(OperationType.BreacketOpen, null));
+                                brksOpnd++;
+                            }
 
                             break;
                         }
@@ -222,7 +239,7 @@ namespace NiL.C.CodeDom.Expressions
                             {
                                 operations.Add(operationsStack.Pop());
                                 itemsCount++;
-                                if ((prmsCount == 0) 
+                                if ((prmsCount == 0)
                                  || (operations[operations.Count - 1].Type == OperationType.ArgumentPlaceholder))
                                     prmsCount++;
                             }
@@ -239,6 +256,7 @@ namespace NiL.C.CodeDom.Expressions
                             }
 
                             operationsStack.Pop();
+
                             if (operationsStack.Count > 0 && operationsStack.Peek().Type == OperationType.Call)
                             {
                                 var t = operationsStack.Pop();
@@ -246,6 +264,70 @@ namespace NiL.C.CodeDom.Expressions
                                 operations.Add(operationsStack.Pop());
                                 operations.Add(t);
                                 operationsStack.Push(new Operation(OperationType.ArgumentPlaceholder));
+                            }
+
+                            brksOpnd--;
+
+                            break;
+                        }
+                    case '[':
+                        {
+                            if (operationsStack.Peek().Type == OperationType.Get)
+                            {
+                                operationsStack.Push(new Operation(OperationType.Index, null));
+                                operationsStack.Push(new Operation(OperationType.SquareBreacketOpen, null));
+                            }
+                            else
+                            {
+                                throw new SyntaxError(); // Надо разобрать случай "0[a]"
+                            }
+
+                            brksOpnd++;
+
+                            break;
+                        }
+                    case ']':
+                        {
+                            int itemsCount = 0;
+                            int prmsCount = 0;
+
+                            while (operationsStack.Count > 0
+                                && operationsStack.Peek().Type != OperationType.SquareBreacketOpen)
+                            {
+                                operations.Add(operationsStack.Pop());
+                                itemsCount++;
+                                if ((prmsCount == 0) || (operations[operations.Count - 1].Type == OperationType.ArgumentPlaceholder))
+                                    prmsCount++;
+                            }
+
+                            if (operationsStack.Count == 0)
+                            {
+                                while (itemsCount-- > 0)
+                                {
+                                    operationsStack.Push(operations[operations.Count - 1]);
+                                    operations.RemoveAt(operations.Count - 1);
+                                }
+
+                                goto case ';';
+                            }
+
+                            for (var i = prmsCount; i-- > 1;)
+                            {
+                                operations.Add(new Operation(OperationType.None));
+                            }
+
+                            operationsStack.Pop();
+                            brksOpnd--;
+
+                            var indexOperation = operationsStack.Pop();
+                            indexOperation.Parameter = prmsCount;
+                            var indexArgument = operationsStack.Pop();
+                            operationsStack.Push(indexOperation);
+                            operationsStack.Push(indexArgument);
+                            while (prmsCount-- > 0)
+                            {
+                                operationsStack.Push(operations[operations.Count - 1]);
+                                operations.RemoveAt(operations.Count - 1);
                             }
 
                             break;
@@ -347,10 +429,13 @@ namespace NiL.C.CodeDom.Expressions
                         }
                     case ',':
                         {
-                            if (!processComma)
+                            if (!processComma && brksOpnd == 0)
                                 goto case ';';
-                            if (popIfNeed(operationsStack, operations, OperationType.Comma))
-                                operationsStack.Push(new Operation(OperationType.ArgumentPlaceholder));
+
+                            while (popIfNeed(operationsStack, operations, OperationType.Comma)) ;
+
+                            operationsStack.Push(new Operation(OperationType.ArgumentPlaceholder));
+
                             unary = true;
 
                             break;
@@ -406,7 +491,7 @@ namespace NiL.C.CodeDom.Expressions
                 unary = false;
                 while (char.IsWhiteSpace(code[index])) index++;
             }
-            else if (Parser.ValidateName(true, code, ref index))
+            else if (Parser.ValidateName(false, code, ref index))
             {
                 int refDepth = 0;
                 var br = code[pindex] == '(';
@@ -420,7 +505,7 @@ namespace NiL.C.CodeDom.Expressions
                         pindex++;
                     }
                 }
-                var name = code.Substring(pindex, index - pindex - (br ? 1 : 0)).TrimEnd();
+                var name = code.Substring(pindex, index - pindex).TrimEnd();
 
                 if (br && refDepth == 0)
                 {

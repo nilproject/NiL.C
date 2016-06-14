@@ -13,7 +13,7 @@ namespace NiL.C.CodeDom.Declarations
         Invalid = 0,
         Void,
         Char,
-        UChar,
+        SChar,
         WChar,
         Short,
         UShort,
@@ -24,10 +24,43 @@ namespace NiL.C.CodeDom.Declarations
         Float,
         Double,
         Object,
-        Function
+        Function,
+        Pointer
     }
 
-    internal class CType : Definition
+    internal sealed class PointerType : CType
+    {
+        public override CTypeCode TypeCode
+        {
+            get
+            {
+                return CTypeCode.Pointer;
+            }
+        }
+
+        public override bool IsPointer
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override int Size
+        {
+            get
+            {
+                return IntPtr.Size;
+            }
+        }
+
+        public PointerType(string itemTypeName)
+            : base(itemTypeName + "*")
+        {
+        }
+    }
+
+    internal abstract class CType : Definition
     {
         protected CType refernceTypeCache = null;
 
@@ -39,13 +72,14 @@ namespace NiL.C.CodeDom.Declarations
             }
         }
 
-        public virtual bool IsPointer { get { return TargetType != null; } }
+        public abstract bool IsPointer { get; }
         public virtual bool IsArray { get; internal set; }
         public virtual int ArrayLength { get; internal set; }
         public virtual CType TargetType { get; internal set; }
         public virtual bool IsGeneric { get; internal set; }
         public virtual bool IsCallable { get; internal set; }
-        public virtual Definition Definition { get; internal set; }
+        public virtual Entity Definition { get; protected set; }
+        public abstract int Size { get; }
 
         internal CType(string name)
         {
@@ -54,7 +88,7 @@ namespace NiL.C.CodeDom.Declarations
 
         public virtual CType MakePointerType()
         {
-            return refernceTypeCache ?? (refernceTypeCache = new CType(Name + "*") { TargetType = this });
+            return refernceTypeCache ?? (refernceTypeCache = new PointerType(Name) { TargetType = this });
         }
 
         public override string ToString()

@@ -26,10 +26,14 @@ namespace TestApp
             Console.Write(o);
         }
 
+        private readonly byte[] format = new byte[] { (byte)'%', (byte)'i' };
+
         unsafe void main()
         {
-            void* p = (void*)0;
-            f("", 1);
+            int* a = (int*)Marshal.AllocHGlobal(10 * 4);
+            a[0] = 123;
+            fixed (byte* f = &format[0])
+                NCRuntime.Stdio.printf(f, (object)(*a));
         }
     }
 }

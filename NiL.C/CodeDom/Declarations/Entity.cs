@@ -12,6 +12,7 @@ namespace NiL.C.CodeDom.Declarations
     {
         //public string DefinitionTypeName { get; protected set; }
         public virtual CType Type { get; internal set; }
+        public abstract int Size { get; }
 
         internal Entity(CType type, string name)
         {

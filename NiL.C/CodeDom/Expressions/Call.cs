@@ -20,7 +20,7 @@ namespace NiL.C.CodeDom.Expressions
             {
                 if (!(first is EntityAccessExpression))
                     throw new ArgumentException();
-                var cfunc = (first as EntityAccessExpression).Declaration as CFunction;
+                var cfunc = (first as EntityAccessExpression).Declaration as Function;
                 return cfunc.ReturnType;
             }
         }
@@ -47,7 +47,7 @@ namespace NiL.C.CodeDom.Expressions
         {
             if (!(first is EntityAccessExpression))
                 throw new ArgumentException();
-            var cfunc = (first as EntityAccessExpression).Declaration as CFunction;
+            var cfunc = (first as EntityAccessExpression).Declaration as Function;
             var info = cfunc.GetInfo(method.Module) as MethodInfo;
             if (cfunc == null)
                 throw new ArgumentException();

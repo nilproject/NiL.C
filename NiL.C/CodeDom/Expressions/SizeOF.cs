@@ -8,7 +8,7 @@ namespace NiL.C.CodeDom.Expressions
 #if !PORTABLE
     [Serializable]
 #endif
-    internal sealed class Indirection : Expression
+    internal sealed class SizeOf : Expression
     {
         public override CType ResultType
         {
@@ -18,7 +18,7 @@ namespace NiL.C.CodeDom.Expressions
             }
         }
 
-        public Indirection(Expression first)
+        public SizeOf(Expression first)
             : base(first, null)
         {
             if (!first.ResultType.IsPointer)
@@ -27,12 +27,7 @@ namespace NiL.C.CodeDom.Expressions
 
         internal override void Emit(EmitMode mode, System.Reflection.Emit.MethodBuilder method)
         {
-            first.Emit(EmitMode.Get, method);
-            var targetType = (Type)first.ResultType.TargetType.GetInfo(method.Module);
-            if (mode == EmitMode.Get)
-                method.GetILGenerator().Emit(OpCodes.Ldobj, targetType);
-            else if (mode == EmitMode.SetOrNone)
-                method.GetILGenerator().Emit(OpCodes.Stobj, targetType);
+            throw new NotImplementedException();
         }
 
         public override string ToString()

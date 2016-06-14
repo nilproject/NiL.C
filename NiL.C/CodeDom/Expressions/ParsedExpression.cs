@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NiL.C.CodeDom.Declarations;
 
 namespace NiL.C.CodeDom.Expressions
 {
@@ -83,8 +84,11 @@ namespace NiL.C.CodeDom.Expressions
                                         }
                                 }
                             }
-                            else
-                                throw new ArgumentException("Can not process expression: " + prm);
+                            else if (prm is int)
+                            {
+                                prm = new Constant(prm);
+                            }
+                            else throw new ArgumentException("Can not process expression: " + prm);
 
                             operationsStack.Peek().Parameter = prm;
 
@@ -115,6 +119,7 @@ namespace NiL.C.CodeDom.Expressions
                             operationsStack.Push(operation);
                             break;
                         }
+                    case OperationType.Assign:
                     case OperationType.Less:
                     case OperationType.Multiplicate:
                     case OperationType.Addition:
@@ -135,6 +140,10 @@ namespace NiL.C.CodeDom.Expressions
 
                                 case OperationType.Less:
                                     operation.Parameter = new Less((Expression)first.Parameter, (Expression)second.Parameter);
+                                    break;
+
+                                case OperationType.Assign:
+                                    operation.Parameter = new Assign((Expression)first.Parameter, (Expression)second.Parameter);
                                     break;
                             }
                             operationsStack.Push(operation);
@@ -160,6 +169,36 @@ namespace NiL.C.CodeDom.Expressions
                         {
                             var operation = operationsStack.Pop();
                             operation.Parameter = new Indirection((Expression)operationsStack.Pop().Parameter);
+                            operationsStack.Push(operation);
+                            break;
+                        }
+                    case OperationType.Cast:
+                        {
+                            var operation = operationsStack.Pop();
+                            operation.Parameter = new Cast((Expression)operationsStack.Pop().Parameter, (CType)operation.Parameter);
+                            operationsStack.Push(operation);
+                            break;
+                        }
+                    case OperationType.SizeOf:
+                        {
+                            var operation = operationsStack.Pop();
+                            operation.Parameter = new Constant(((Expression)operationsStack.Pop().Parameter).ResultType.Size);
+                            operation.Type = OperationType.Push;
+                            operationsStack.Push(operation);
+                            break;
+                        }
+                    case OperationType.Index:
+                        {
+                            var operation = operationsStack.Pop();
+                            var pointer = (Expression)operationsStack.Pop().Parameter;
+                            var index = (Expression)operationsStack.Pop().Parameter;
+                            
+                            for (var indexOfIndex = (int)operation.Parameter; indexOfIndex > 1; indexOfIndex--)
+                                index = new None(index, (Expression)operationsStack.Pop().Parameter);
+
+                            var item = new Addition(pointer, index); // там всё оператор сложения обработает
+                            operation.Parameter = new Indirection(item);
+                            operation.Type = OperationType.Indirection;
                             operationsStack.Push(operation);
                             break;
                         }

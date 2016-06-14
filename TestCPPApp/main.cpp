@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "First.h"
 
@@ -18,13 +19,10 @@ typedef int *(*type[])();
 
 int main()
 {
-	def(/* эта скобка не обрабатывается препроцессором */1);
-	int(*x); // переменная x типа int*
-	int(*x2)(int); // функция int x2(int)
-	int(*x3(int));
-	goto label;
-	magic(int x(f,b) { ну нифига себе });
-	label:
-	auto a = (void(*)())0;
-	printf("%i   %i", 0xfffffffff);
+	short a[6] = { 0,1,2,3,4,5 };
+	a[0] = sizeof(int) / 4;
+	int i = 1;
+
+	printf("%i", *a);
+	getchar();
 }

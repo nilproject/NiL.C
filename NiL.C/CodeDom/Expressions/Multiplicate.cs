@@ -13,16 +13,18 @@ namespace NiL.C.CodeDom.Expressions
 #endif
     internal sealed class Multiplicate : Expression
     {
-        public override Declarations.CType ResultType
+        public override CType ResultType
         {
             get
             {
                 var ftypecode = first.ResultType.TypeCode;
                 var stypecode = second.ResultType.TypeCode;
+                
                 if (ftypecode <= CTypeCode.Void)
                     throw new ArgumentException("Invalid operand type");
                 if (stypecode <= CTypeCode.Void)
                     throw new ArgumentException("Invalid operand type");
+
                 return EmbeddedEntities.GetTypeByCode((CTypeCode)Math.Max(Math.Max((int)ftypecode, (int)stypecode), (int)CTypeCode.Int));
             }
         }

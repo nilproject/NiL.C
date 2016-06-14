@@ -1,19 +1,8 @@
-﻿int sum(int a, int b)
+﻿void main()
 {
-	return a + b;
-}
-
-void main()
-{
-	int i = 0;
-
-	if (true)
-		printf("%i\n", i++ + 2);
-
-	if (false)
-	{
-
-	}
-	else
-		printf("%i\n", i++ + 2);
+	int* a = (int*)calloc(10, sizeof(int));
+	a[0] = 123;
+	a[1] = 456;
+	a[2] = a[0] + a[1];
+	printf("%i %i %i", *a, a[1], a[2]);
 }

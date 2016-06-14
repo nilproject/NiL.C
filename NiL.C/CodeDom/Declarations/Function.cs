@@ -10,15 +10,47 @@ using NiL.C.CodeDom.Statements;
 
 namespace NiL.C.CodeDom.Declarations
 {
-    internal class CFunction : Entity
+    internal sealed class FunctionType : CType
+    {
+        public override int Size
+        {
+            get
+            {
+                return IntPtr.Size;
+            }
+        }
+
+        public override bool IsPointer
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public FunctionType(Function func, string typeName)
+            :base(typeName)
+        {
+            Definition = func;
+        }
+    }
+
+    internal class Function : Entity
     {
         private MethodBuilder method;
 
         public virtual CType ReturnType { get; protected set; }
         public virtual CodeBlock Body { get; protected set; }
         public virtual Parameter[] Parameters { get; protected set; }
+        public override int Size
+        {
+            get
+            {
+                return IntPtr.Size;
+            }
+        }
 
-        internal CFunction(CType returnType, Parameter[] parameters, string name)
+        internal Function(CType returnType, Parameter[] parameters, string name)
             : base(null, name)
         {
             if (returnType == null)
@@ -49,10 +81,10 @@ namespace NiL.C.CodeDom.Declarations
             }
 
             var type = Parser.ParseType(state, (CType)def, code, ref index, out name);
-            if (type == null || !(type.Definition is CFunction))
+            if (type == null || !(type.Definition is Function))
                 return null;
 
-            var prms = (type.Definition as CFunction).Parameters;
+            var prms = (type.Definition as Function).Parameters;
 
             while (code.Length > index && char.IsWhiteSpace(code[index])) index++;
             i = index;
@@ -101,10 +133,10 @@ namespace NiL.C.CodeDom.Declarations
             using (state.Scope)
             {
                 Definition funcd;
-                CFunction func;
+                Function func;
                 if (state.Definitions.TryGetValue(name, out funcd))
                 {
-                    func = (CFunction)funcd;
+                    func = (Function)funcd;
                     if (func.Body != null)
                         throw new SyntaxError("Try to redefine \"" + name + "\"");
                     if (prms.Length != func.Parameters.Length || func.ReturnType.Name != typeName)
@@ -117,7 +149,7 @@ namespace NiL.C.CodeDom.Declarations
                     func.Parameters = prms;
                 }
                 else
-                    state.Definitions[name] = func = (CFunction)type.Definition;
+                    state.Definitions[name] = func = (Function)type.Definition;
 
                 while (char.IsWhiteSpace(code[index])) index++;
                 if (code[index] == ';')
@@ -202,7 +234,7 @@ namespace NiL.C.CodeDom.Declarations
                 if (state.Definitions.TryGetValue(typeName, out def))
                     Type = (CType)def;
                 else
-                    state.Definitions[typeName] = Type = new CType(typeName) { Definition = this };
+                    state.Definitions[typeName] = Type = new FunctionType(this, typeName);
             }
 
             using (state.Scope)

@@ -16,12 +16,26 @@ namespace NiL.C.CodeDom.Expressions
         {
             get
             {
+                if (first.ResultType.IsPointer
+                    && second.ResultType.TypeCode > CTypeCode.Void && second.ResultType.TypeCode < CTypeCode.Float)
+                {
+                    return first.ResultType;
+                }
+
+                if (second.ResultType.IsPointer
+                    && first.ResultType.TypeCode > CTypeCode.Void && first.ResultType.TypeCode < CTypeCode.Float)
+                {
+                    return second.ResultType;
+                }
+
                 var ftypecode = first.ResultType.TypeCode;
                 var stypecode = second.ResultType.TypeCode;
+
                 if (ftypecode <= CTypeCode.Void)
                     throw new ArgumentException("Invalid operand type");
                 if (stypecode <= CTypeCode.Void)
                     throw new ArgumentException("Invalid operand type");
+
                 return EmbeddedEntities.GetTypeByCode((CTypeCode)Math.Max(Math.Max((int)ftypecode, (int)stypecode), (int)CTypeCode.Int));
             }
         }

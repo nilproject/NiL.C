@@ -29,7 +29,7 @@ namespace NiL.C.CodeDom.Statements
             Tools.SkipSpaces(code, ref index);
 
             var initializer = VariableDefinition.Parse(state, code, ref index)
-                           ?? Expressions.Expression.Parse(state, code, ref index);
+                           ?? Expression.Parse(state, code, ref index);
             
             Tools.SkipSpaces(code, ref index);
 

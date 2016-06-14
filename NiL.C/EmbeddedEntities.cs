@@ -50,25 +50,30 @@ namespace NiL.C
 
             Declarations.Add("printf",
                 CLRFunction.CreateFunction(
-                "printf",
-                typeof(NCRuntime.Stdio).GetMethod("printf")
+                    "printf",
+                    typeof(NCRuntime.Stdio).GetMethod("printf")
                 ));
             Declarations.Add("scanf",
                 CLRFunction.CreateFunction(
-                "scanf",
-                typeof(NCRuntime.Stdio).GetMethod("scanf")
+                    "scanf",
+                    typeof(NCRuntime.Stdio).GetMethod("scanf")
                 ));
 
+            Declarations.Add("calloc",
+                CLRFunction.CreateFunction(
+                    "calloc",
+                    typeof(NCRuntime.Stdlib).GetMethod("calloc")
+                ));
 
             Declarations.Add("lmax",
                 CLRFunction.CreateFunction(
-                "lmax",
-                typeof(NCRuntime.ExtMath).GetMethod("lmax")
+                    "lmax",
+                    typeof(NCRuntime.ExtMath).GetMethod("lmax")
                 ));
             Declarations.Add("__wrtln",
                 CLRFunction.CreateFunction(
-                "__wrtln",
-                typeof(NCRuntime.Debug).GetMethod("__wrtln")
+                    "__wrtln",
+                    typeof(NCRuntime.Debug).GetMethod("__wrtln")
                 ));
         }
 
@@ -80,6 +85,8 @@ namespace NiL.C
                     return (CType)Declarations["void"];
                 case CTypeCode.Int:
                     return (CType)Declarations["int"];
+                case CTypeCode.Pointer:
+                    return ((CType)Declarations["void"]).MakePointerType();
                 default:
                     throw new NotImplementedException();
             }

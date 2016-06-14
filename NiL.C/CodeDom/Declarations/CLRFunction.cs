@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace NiL.C.CodeDom.Declarations
 {
-    internal sealed class CLRFunction : CFunction
+    internal sealed class CLRFunction : Function
     {
         private MethodInfo method;
 
@@ -40,7 +40,16 @@ namespace NiL.C.CodeDom.Declarations
         public static CLRFunction CreateFunction(string alias, MethodInfo method)
         {
             CType returntype = null;
-            switch (System.Type.GetTypeCode(method.ReturnType))
+            var type = method.ReturnType;
+
+            var pointerDepth = 0;
+            while(type.IsPointer)
+            {
+                pointerDepth++;
+                type = type.GetElementType();
+            }
+
+            switch (System.Type.GetTypeCode(type))
             {
                 case TypeCode.Empty:
                     {
@@ -54,13 +63,18 @@ namespace NiL.C.CodeDom.Declarations
                     }
                 case TypeCode.Object:
                     {
-                        if (method.ReturnType == typeof(void))
+                        if (type == typeof(void))
                             goto case TypeCode.Empty;
+
                         goto default;
                     }
                 default:
-                    throw new NotImplementedException(method.ReturnType.ToString());
+                    throw new NotImplementedException(type.ToString());
             }
+
+            while (pointerDepth-- > 0)
+                returntype = returntype.MakePointerType();
+
             return new CLRFunction(returntype, alias, method);
         }
 

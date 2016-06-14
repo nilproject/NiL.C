@@ -18,10 +18,14 @@ namespace NiL.C.CodeDom.Statements
             int pindex = index;
             if (!Parser.ValidateTypeName(code, ref index))
                 return null;
+
             string typename = Parser.CanonizeTypeName(code.Substring(pindex, index - pindex));
             var rootType = state.GetDefinition(typename, false);
             if (!(rootType is CType))
+            {
+                index = pindex;
                 return null;
+            }
 
             var variables = new List<Entity>();
             List<CodeNode> initializators = null;
@@ -66,6 +70,7 @@ namespace NiL.C.CodeDom.Statements
                 if (code[index] != ',' && code[index] != ';')
                     throw new SyntaxError("Unexpected token at " + CodeCoordinates.FromTextPosition(code, index, 0));
             }
+
             return new VariableDefinition
             {
                 Variables = variables.ToArray(),
@@ -106,10 +111,12 @@ namespace NiL.C.CodeDom.Statements
             for (var i = 0; i < Variables.Length; i++)
                 state.DeclareSymbol(Variables[i]);
             if (Initializators != null)
+            {
                 for (var i = 0; i < Initializators.Length; i++)
                 {
                     Initializators[i].Build(ref Initializators[i], state);
                 }
+            }
             return false;
         }
 
@@ -118,7 +125,9 @@ namespace NiL.C.CodeDom.Statements
             for (var i = 0; i < Variables.Length; i++)
                 Variables[i].Bind(method);
             if (Initializators != null)
+            {
                 for (var i = 0; i < Initializators.Length; i++)
+                {
                     if (Initializators[i] != null)
                     {
                         if (Initializators[i] is IWantToGetType)
@@ -126,6 +135,8 @@ namespace NiL.C.CodeDom.Statements
                         Initializators[i].Emit(EmitMode.Get, method);
                         Variables[i].Emit(EmitMode.SetOrNone, method);
                     }
+                }
+            }
         }
     }
 }

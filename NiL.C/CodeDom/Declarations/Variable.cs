@@ -33,6 +33,13 @@ namespace NiL.C.CodeDom.Declarations
                 pinned = true;
             }
         }
+        public override int Size
+        {
+            get
+            {
+                return Type.Size;
+            }
+        }
 
         internal Variable(CType type, string name)
             : base(type, name)
@@ -60,7 +67,26 @@ namespace NiL.C.CodeDom.Declarations
                 case EmitMode.Get:
                     {
                         if (info.LocalIndex < 256)
-                            method.GetILGenerator().Emit(OpCodes.Ldloc_S, (byte)info.LocalIndex);
+                        {
+                            switch (info.LocalIndex)
+                            {
+                                case 0:
+                                    method.GetILGenerator().Emit(OpCodes.Ldloc_0);
+                                    break;
+                                case 1:
+                                    method.GetILGenerator().Emit(OpCodes.Ldloc_1);
+                                    break;
+                                case 2:
+                                    method.GetILGenerator().Emit(OpCodes.Ldloc_2);
+                                    break;
+                                case 3:
+                                    method.GetILGenerator().Emit(OpCodes.Ldloc_3);
+                                    break;
+                                default:
+                                    method.GetILGenerator().Emit(OpCodes.Ldloc_S, (byte)info.LocalIndex);
+                                    break;
+                            }
+                        }
                         else
                             method.GetILGenerator().Emit(OpCodes.Ldloc, (short)info.LocalIndex);
                         break;
@@ -68,7 +94,26 @@ namespace NiL.C.CodeDom.Declarations
                 case EmitMode.SetOrNone:
                     {
                         if (info.LocalIndex < 256)
-                            method.GetILGenerator().Emit(OpCodes.Stloc_S, (byte)info.LocalIndex);
+                        {
+                            switch (info.LocalIndex)
+                            {
+                                case 0:
+                                    method.GetILGenerator().Emit(OpCodes.Stloc_0);
+                                    break;
+                                case 1:
+                                    method.GetILGenerator().Emit(OpCodes.Stloc_1);
+                                    break;
+                                case 2:
+                                    method.GetILGenerator().Emit(OpCodes.Stloc_2);
+                                    break;
+                                case 3:
+                                    method.GetILGenerator().Emit(OpCodes.Stloc_3);
+                                    break;
+                                default:
+                                    method.GetILGenerator().Emit(OpCodes.Stloc_S, (byte)info.LocalIndex);
+                                    break;
+                            }
+                        }
                         else
                             method.GetILGenerator().Emit(OpCodes.Stloc, (short)info.LocalIndex);
                         break;

@@ -80,8 +80,7 @@
     <Compile Include="CodeDom\Declarations\CLRFunction.cs" />
     <Compile Include="CodeDom\Declarations\CLRType.cs" />
     <Compile Include="CodeDom\Declarations\Definition.cs" />
-    <Compile Include="CodeDom\Declarations\CFunction.cs" />
-    <Compile Include="CodeDom\Declarations\GenericType.cs" />
+    <Compile Include="CodeDom\Declarations\Function.cs" />
     <Compile Include="CodeDom\Declarations\Parameter.cs" />
     <Compile Include="CodeDom\Declarations\Variable.cs" />
     <Compile Include="CodeDom\Declarations\Entity.cs" />
@@ -94,6 +93,8 @@
     <Compile Include="CodeDom\Expressions\Call.cs" />
     <Compile Include="CodeDom\Expressions\Constant.cs" />
     <Compile Include="CodeDom\Expressions\Decrement.cs" />
+    <Compile Include="CodeDom\Expressions\Cast.cs" />
+    <Compile Include="CodeDom\Expressions\SizeOf.cs" />
     <Compile Include="CodeDom\Expressions\Indirection.cs" />
     <Compile Include="CodeDom\Expressions\GetPointer.cs" />
     <Compile Include="CodeDom\Expressions\Delete.cs" />
