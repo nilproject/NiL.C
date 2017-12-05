@@ -38,6 +38,7 @@ namespace NiL.C.CodeDom.Declarations
     internal class Function : Entity
     {
         private MethodBuilder method;
+        public MethodBuilder Method => method;
 
         public virtual CType ReturnType { get; protected set; }
         public virtual CodeBlock Body { get; protected set; }
@@ -73,7 +74,7 @@ namespace NiL.C.CodeDom.Declarations
 
             typeName = Parser.CanonizeTypeName(code.Substring(i, index - i));
             Definition def = state.GetDefinition(typeName, false);
-            // позволяет int по умолчанию
+            // позволяет int по-умолчанию
             if (!(def is CType))
             {
                 index = i;
@@ -171,12 +172,15 @@ namespace NiL.C.CodeDom.Declarations
                     throw new InvalidOperationException(method + " associated with another module");
                 return;
             }
-            method = ((ModuleBuilder)module).DefineGlobalMethod(Name,
+
+            method = module.DefineGlobalMethod(Name,
                 MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
                 (Type)ReturnType.GetInfo(module),
                 Parameters.Select(x => (Type)x.Type.GetInfo(module)).ToArray());
+
             for (var i = 0; i < Parameters.Length; i++)
                 Parameters[i].Bind(method);
+
             //method.DefineParameter(i, ParameterAttributes.In, Parameters[i].Name);
         }
 

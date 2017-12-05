@@ -16,8 +16,8 @@ namespace TestApp
         static void Main(string[] args)
         {
             Compiler.CompileAndSave(new StreamReader(new FileStream("program.c", FileMode.Open)).ReadToEnd(), "TestC", System.Reflection.Emit.PEFileKinds.ConsoleApplication);
-            Assembly.LoadFile(Environment.CurrentDirectory + "\\testc.exe").GetModules()[0].GetMethod("main").Invoke(null, null);
-            //Process.Start(new ProcessStartInfo(Environment.CurrentDirectory + "\\testc.exe") { UseShellExecute = false });
+            //Assembly.LoadFile(Environment.CurrentDirectory + "\\testc.exe").GetModules()[0].GetMethod("main").Invoke(null, null);
+            Process.Start(new ProcessStartInfo(Environment.CurrentDirectory + "\\testc.exe") { UseShellExecute = false });
             Console.ReadKey(true);
         }
 

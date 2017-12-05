@@ -109,8 +109,8 @@ namespace NiL.C
 
                     if (j == pattern.Length)
                     {
-                        if ((i + pattern.Length >= this.Length || Parser.isIdentificatorTerminator(this[i - 1]))
-                            && (i == 0 || Parser.isIdentificatorTerminator(this[i - 1])))
+                        if ((i + pattern.Length >= this.Length || Parser.isIdentifierTerminator(this[i - 1]))
+                            && (i == 0 || Parser.isIdentifierTerminator(this[i - 1])))
                         {
                             var blockIndex = getBlockIndex(i);
                             var inblockPosition = i - _blocks[blockIndex].ExternPosition;

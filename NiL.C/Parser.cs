@@ -188,7 +188,7 @@ namespace NiL.C
                 || Validate(code, "char", ref index)
                 || Validate(code, "auto", ref index)
                 || Validate(code, "int", ref index))
-                return isIdentificatorTerminator(code[index]);
+                return isIdentifierTerminator(code[index]);
 
             if (Validate(code, "signed", ref index))
             {
@@ -200,7 +200,7 @@ namespace NiL.C
                 || Validate(code, " long long", ref index)
                 || Validate(code, " long int", ref index)
                 || Validate(code, " long", ref index)
-                || true) && isIdentificatorTerminator(code[index]);
+                || true) && isIdentifierTerminator(code[index]);
             }
 
             if (Validate(code, "unsigned", ref index))
@@ -213,7 +213,7 @@ namespace NiL.C
                 || Validate(code, " long long", ref index)
                 || Validate(code, " long int", ref index)
                 || Validate(code, " long", ref index)
-                || true) && isIdentificatorTerminator(code[index]);
+                || true) && isIdentifierTerminator(code[index]);
             }
 
             if (Validate(code, "long", ref index))
@@ -223,31 +223,31 @@ namespace NiL.C
                 || Validate(code, " long", ref index)
                 || Validate(code, " double _Complex", ref index)
                 || Validate(code, " double", ref index)
-                || true) && isIdentificatorTerminator(code[index]);
+                || true) && isIdentifierTerminator(code[index]);
             }
 
             if (Validate(code, "short", ref index))
             {
                 return (Validate(code, " int", ref index)
-                || true) && isIdentificatorTerminator(code[index]);
+                || true) && isIdentifierTerminator(code[index]);
             }
 
             if (Validate(code, "float", ref index)
                 && (Validate(code, " _Complex", ref index) || true))
-                return isIdentificatorTerminator(code[index]);
+                return isIdentifierTerminator(code[index]);
 
             if (Validate(code, "double", ref index)
                 && (Validate(code, " _Complex", ref index) || true))
-                return isIdentificatorTerminator(code[index]);
+                return isIdentifierTerminator(code[index]);
             if (Validate(code, "struct ", ref index))
             {
                 if (ValidateName(code, ref index, true))
-                    return isIdentificatorTerminator(code[index]);
+                    return isIdentifierTerminator(code[index]);
                 index -= "struct ".Length;
                 return false;
             }
 
-            return ValidateName(code, ref index) && isIdentificatorTerminator(code[index]);
+            return ValidateName(code, ref index) && isIdentifierTerminator(code[index]);
         }
 
         private static readonly char[] separators = new char[] { ' ', '\u000A', '\u000D', '\u2028', '\u2029' };
@@ -392,6 +392,7 @@ namespace NiL.C
             int j = index;
             if (code[j] == 'L') // wide
                 j++;
+
             if (j + 1 < code.Length && ((code[j] == '\'') || (code[j] == '"')))
             {
                 char fchar = code[j];
@@ -460,10 +461,11 @@ namespace NiL.C
                 || (c == '?')
                 || (c == ':')
                 || (c == ',')
-                || (c == '.');
+                || (c == '.')
+                || (c == '|');
         }
 
-        internal static bool isIdentificatorTerminator(char c)
+        internal static bool isIdentifierTerminator(char c)
         {
             return c == ' '
                 || Tools.isLineTerminator(c)
